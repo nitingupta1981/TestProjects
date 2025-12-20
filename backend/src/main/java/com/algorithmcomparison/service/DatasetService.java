@@ -150,11 +150,28 @@ public class DatasetService {
      * 
      * @param datasetId The dataset ID
      * @return DatasetCharacteristics with analysis results
+     * @throws IllegalArgumentException if dataset not found
+     * @throws UnsupportedOperationException if dataset type is not INTEGER
      */
     public DatasetCharacteristics analyzeDataset(String datasetId) {
         Dataset dataset = getDataset(datasetId);
         if (dataset == null) {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
+        }
+
+        // Check dataset type
+        if ("STRING".equals(dataset.getDataType())) {
+            throw new UnsupportedOperationException(
+                "Dataset analysis is currently only supported for INTEGER datasets. " +
+                "Dataset '" + dataset.getName() + "' is of type STRING."
+            );
+        }
+
+        // Verify data is not null
+        if (dataset.getData() == null) {
+            throw new IllegalStateException(
+                "Dataset '" + dataset.getName() + "' has no data to analyze."
+            );
         }
 
         return DatasetAnalyzer.analyze(dataset.getData());

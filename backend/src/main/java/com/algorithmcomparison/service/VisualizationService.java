@@ -40,11 +40,25 @@ public class VisualizationService {
      * 
      * @param datasetId The dataset ID
      * @return List of visualization steps
+     * @throws IllegalArgumentException if dataset not found
+     * @throws UnsupportedOperationException if dataset type is not INTEGER
      */
     public List<VisualizationStep> visualizeBubbleSort(String datasetId) {
         Dataset dataset = datasetService.getDataset(datasetId);
         if (dataset == null) {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
+        }
+
+        // Check dataset type
+        if ("STRING".equals(dataset.getDataType())) {
+            throw new UnsupportedOperationException(
+                "Visualization is currently only supported for INTEGER datasets. " +
+                "Dataset '" + dataset.getName() + "' is of type STRING."
+            );
+        }
+
+        if (dataset.getData() == null) {
+            throw new IllegalStateException("Dataset has no data to visualize");
         }
 
         int[] array = Arrays.copyOf(dataset.getData(), dataset.getData().length);
@@ -101,6 +115,8 @@ public class VisualizationService {
      * @param datasetId The dataset ID
      * @param algorithmName The algorithm name
      * @return List of visualization steps
+     * @throws IllegalArgumentException if dataset not found
+     * @throws UnsupportedOperationException if dataset type is not INTEGER
      */
     public List<VisualizationStep> visualizeAlgorithm(String datasetId, String algorithmName) {
         // For now, only Bubble Sort is fully implemented
@@ -112,6 +128,18 @@ public class VisualizationService {
         Dataset dataset = datasetService.getDataset(datasetId);
         if (dataset == null) {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
+        }
+
+        // Check dataset type
+        if ("STRING".equals(dataset.getDataType())) {
+            throw new UnsupportedOperationException(
+                "Visualization is currently only supported for INTEGER datasets. " +
+                "Dataset '" + dataset.getName() + "' is of type STRING."
+            );
+        }
+
+        if (dataset.getData() == null) {
+            throw new IllegalStateException("Dataset has no data to visualize");
         }
 
         List<VisualizationStep> steps = new ArrayList<>();

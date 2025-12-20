@@ -148,11 +148,15 @@ function renderDatasets() {
             item.classList.add('selected');
         }
         
+        const isString = dataset.dataType === 'STRING';
+        const analysisNote = isString ? 
+            '<br><small style="color: #ff9800;">⚠️ Analysis not available for STRING datasets</small>' : '';
+        
         item.innerHTML = `
             <div style="flex: 1;">
                 <strong>${dataset.name}</strong><br>
                 Type: ${dataset.type} | Data: ${dataset.dataType || 'INTEGER'}<br>
-                Size: ${dataset.size}<br>
+                Size: ${dataset.size}${analysisNote}<br>
                 <small>ID: ${dataset.id.substring(0, 8)}...</small>
             </div>
             <div class="dataset-actions">
@@ -217,6 +221,15 @@ async function handleAnalyzeDataset() {
     
     try {
         const datasetId = state.selectedDatasets[0];
+        
+        // Check if selected dataset is STRING type
+        const dataset = state.datasets.find(d => d.id === datasetId);
+        if (dataset && dataset.dataType === 'STRING') {
+            showMessage('Analysis is currently only supported for INTEGER datasets. ' +
+                       'Please select an integer dataset or generate a new one.', 'error');
+            return;
+        }
+        
         const analysis = await datasetAnalyzer.analyzeDataset(datasetId, state.operationType);
         
         // Display characteristics
@@ -227,7 +240,9 @@ async function handleAnalyzeDataset() {
         
         showMessage('Analysis complete!', 'success');
     } catch (error) {
-        showMessage('Error analyzing dataset: ' + error.message, 'error');
+        // Handle backend error message
+        const errorMsg = error.message || 'Unknown error occurred';
+        showMessage('Error analyzing dataset: ' + errorMsg, 'error');
     }
 }
 

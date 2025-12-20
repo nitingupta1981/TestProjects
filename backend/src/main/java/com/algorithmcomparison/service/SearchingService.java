@@ -41,12 +41,26 @@ public class SearchingService {
      * @param algorithmName Name of the searching algorithm
      * @param target Value to search for
      * @return AlgorithmResult with performance metrics
+     * @throws IllegalArgumentException if dataset not found or algorithm unknown
+     * @throws UnsupportedOperationException if dataset type is not INTEGER
      */
     public AlgorithmResult executeSearchingAlgorithm(String datasetId, String algorithmName, int target) {
         // Get dataset
         Dataset dataset = datasetService.getDataset(datasetId);
         if (dataset == null) {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
+        }
+
+        // Check dataset type
+        if ("STRING".equals(dataset.getDataType())) {
+            throw new UnsupportedOperationException(
+                "Searching algorithms currently only support INTEGER datasets. " +
+                "Dataset '" + dataset.getName() + "' is of type STRING."
+            );
+        }
+
+        if (dataset.getData() == null) {
+            throw new IllegalStateException("Dataset has no data to search");
         }
 
         // Get algorithm instance
@@ -151,10 +165,25 @@ public class SearchingService {
      * 
      * @param datasetId The dataset ID
      * @return A target value from the dataset
+     * @throws IllegalArgumentException if dataset not found
+     * @throws UnsupportedOperationException if dataset type is not INTEGER
      */
     public int selectTargetValue(String datasetId) {
         Dataset dataset = datasetService.getDataset(datasetId);
-        if (dataset == null || dataset.getData().length == 0) {
+        
+        if (dataset == null) {
+            return 0;
+        }
+
+        // Check dataset type
+        if ("STRING".equals(dataset.getDataType())) {
+            throw new UnsupportedOperationException(
+                "Target selection is currently only supported for INTEGER datasets. " +
+                "Dataset '" + dataset.getName() + "' is of type STRING."
+            );
+        }
+
+        if (dataset.getData() == null || dataset.getData().length == 0) {
             return 0;
         }
 

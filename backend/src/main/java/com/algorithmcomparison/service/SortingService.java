@@ -39,12 +39,26 @@ public class SortingService {
      * @param datasetId ID of the dataset to sort
      * @param algorithmName Name of the sorting algorithm
      * @return AlgorithmResult with performance metrics
+     * @throws IllegalArgumentException if dataset not found or algorithm unknown
+     * @throws UnsupportedOperationException if dataset type is not INTEGER
      */
     public AlgorithmResult executeSortingAlgorithm(String datasetId, String algorithmName) {
         // Get dataset
         Dataset dataset = datasetService.getDataset(datasetId);
         if (dataset == null) {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
+        }
+
+        // Check dataset type
+        if ("STRING".equals(dataset.getDataType())) {
+            throw new UnsupportedOperationException(
+                "Sorting algorithms currently only support INTEGER datasets. " +
+                "Dataset '" + dataset.getName() + "' is of type STRING."
+            );
+        }
+
+        if (dataset.getData() == null) {
+            throw new IllegalStateException("Dataset has no data to sort");
         }
 
         // Create a copy of the data to avoid modifying original
