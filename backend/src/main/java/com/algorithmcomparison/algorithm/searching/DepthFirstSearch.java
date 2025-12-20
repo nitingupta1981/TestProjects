@@ -7,31 +7,28 @@ import com.algorithmcomparison.util.MetricsCollector;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.Stack;
 
 /**
  * Depth First Search (DFS) implementation.
  * 
  * DFS is a graph traversal algorithm that explores as deep as possible along
- * each branch before backtracking. It uses a stack (either explicitly or via
- * recursion) to track the traversal path.
+ * each branch before backtracking. It uses recursion to track the traversal path.
  * 
  * This implementation:
  * 1. Converts the input array to a Binary Search Tree
- * 2. Performs iterative DFS using an explicit stack
+ * 2. Performs recursive DFS
  * 3. Searches for the target value in the graph
  * 
  * Algorithm Steps:
- * 1. Push root node onto stack
- * 2. While stack is not empty:
- *    a. Pop node from stack
- *    b. If not visited, mark as visited
- *    c. Check if node value equals target
- *    d. Push unvisited children onto stack (right then left for proper order)
- * 3. Return result when target found or stack is empty
+ * 1. Start at root node
+ * 2. If node is null or visited, return
+ * 3. Mark node as visited
+ * 4. Check if node value equals target
+ * 5. Recursively visit left child, then right child
+ * 6. Return result when target found or all nodes explored
  * 
  * Time Complexity: O(n) - visits each node once
- * Space Complexity: O(h) where h is the height of the tree (stack depth)
+ * Space Complexity: O(h) where h is the height of the tree (recursion stack)
  * 
  * Best Use Cases:
  * - Finding path existence
@@ -44,6 +41,12 @@ import java.util.Stack;
  */
 public class DepthFirstSearch implements SearchingAlgorithm {
 
+    // Set to track visited nodes (shared across recursive calls)
+    private Set<Integer> visited;
+    private GraphDataset graph;
+    private int target;
+    private MetricsCollector metrics;
+
     @Override
     public int search(int[] array, int target, MetricsCollector metrics) {
         if (array == null || array.length == 0) {
@@ -51,88 +54,80 @@ public class DepthFirstSearch implements SearchingAlgorithm {
         }
 
         // Convert array to Binary Search Tree for graph-based search
-        GraphDataset graph = GraphConverter.convertToBinarySearchTree("dfs_temp", array);
+        this.graph = GraphConverter.convertToBinarySearchTree("dfs_temp", array);
+        this.target = target;
+        this.metrics = metrics;
+        this.visited = new HashSet<>();
 
-        // Perform DFS starting from root (node 0)
-        return dfsIterative(graph, target, metrics);
+        // Perform recursive DFS starting from root (node 0)
+        return dfsRecursive(0);
     }
 
     /**
-     * Performs iterative DFS using an explicit stack.
+     * Performs recursive DFS.
      * 
-     * Iterative approach is preferred over recursive to:
-     * - Avoid stack overflow on deep trees
-     * - Have explicit control over stack operations
-     * - Make traversal easier to visualize and debug
+     * Recursive approach provides:
+     * - Natural implementation of depth-first exploration
+     * - Implicit use of call stack for backtracking
+     * - Cleaner, more readable code
+     * - Better demonstrates the algorithm's nature
      * 
-     * @param graph The graph to search
-     * @param target The target value
-     * @param metrics Metrics collector
+     * @param nodeId The current node ID to explore
      * @return Index of node containing target, or -1 if not found
      */
-    private int dfsIterative(GraphDataset graph, int target, MetricsCollector metrics) {
-        if (graph.getNodeCount() == 0) {
+    private int dfsRecursive(Integer nodeId) {
+        // Base case 1: Invalid node ID
+        if (nodeId == null) {
             return -1;
         }
 
-        // Stack for DFS traversal - stores node IDs
-        Stack<Integer> stack = new Stack<>();
+        // Base case 2: Already visited this node
+        if (visited.contains(nodeId)) {
+            return -1;
+        }
+
+        // Mark node as visited
+        visited.add(nodeId);
+        metrics.recordArrayAccess(1); // Count as a node visit
+
+        // Get the actual node
+        GraphNode currentNode = graph.getNode(nodeId);
         
-        // Set to track visited nodes (prevents infinite loops)
-        Set<Integer> visited = new HashSet<>();
+        if (currentNode == null) {
+            return -1;
+        }
 
-        // Start DFS from root node (node ID 0)
-        stack.push(0);
+        // Compare current node's value with target
+        if (metrics.isEqual(currentNode.getValue(), target)) {
+            // Target found! Return the node ID
+            return nodeId;
+        }
 
-        // Continue until stack is empty (all reachable nodes explored)
-        while (!stack.isEmpty()) {
-            // Pop next node to explore from top of stack
-            Integer currentNodeId = stack.pop();
-
-            // Skip if already visited
-            if (visited.contains(currentNodeId)) {
-                continue;
-            }
-
-            // Mark node as visited
-            visited.add(currentNodeId);
-            metrics.recordArrayAccess(1); // Count as a node visit
-
-            // Get the actual node
-            GraphNode currentNode = graph.getNode(currentNodeId);
-            
-            if (currentNode == null) {
-                continue;
-            }
-
-            // Compare current node's value with target
-            if (metrics.isEqual(currentNode.getValue(), target)) {
-                // Target found! Return the node ID
-                return currentNodeId;
-            }
-
-            // Push children onto stack for further exploration
-            // Push RIGHT child first, then LEFT child
-            // This ensures LEFT child is processed first (LIFO property of stack)
-            
-            if (currentNode.getRightChild() != null && 
-                !visited.contains(currentNode.getRightChild())) {
-                stack.push(currentNode.getRightChild());
-            }
-
-            if (currentNode.getLeftChild() != null && 
-                !visited.contains(currentNode.getLeftChild())) {
-                stack.push(currentNode.getLeftChild());
-            }
-
-            // For linked list graphs, push next node
-            if (currentNode.getNext() != null && 
-                !visited.contains(currentNode.getNext())) {
-                stack.push(currentNode.getNext());
+        // Recursively explore left child
+        if (currentNode.getLeftChild() != null) {
+            int result = dfsRecursive(currentNode.getLeftChild());
+            if (result != -1) {
+                return result; // Found in left subtree
             }
         }
 
-        // Target not found in graph
+        // Recursively explore right child
+        if (currentNode.getRightChild() != null) {
+            int result = dfsRecursive(currentNode.getRightChild());
+            if (result != -1) {
+                return result; // Found in right subtree
+            }
+        }
+
+        // For linked list graphs, explore next node
+        if (currentNode.getNext() != null) {
+            int result = dfsRecursive(currentNode.getNext());
+            if (result != -1) {
+                return result; // Found in next node
+            }
+        }
+
+        // Target not found in this branch
         return -1;
     }
 

@@ -48,7 +48,8 @@ public class DatasetController {
      *   "type": "RANDOM",
      *   "size": 1000,
      *   "minValue": 1,
-     *   "maxValue": 10000
+     *   "maxValue": 10000,
+     *   "dataType": "INTEGER"
      * }
      * 
      * @param request Map containing generation parameters
@@ -59,14 +60,15 @@ public class DatasetController {
         try {
             String type = (String) request.get("type");
             int size = (Integer) request.get("size");
+            String dataType = (String) request.getOrDefault("dataType", "INTEGER");
             
             Dataset dataset;
             if (request.containsKey("minValue") && request.containsKey("maxValue")) {
                 int minValue = (Integer) request.get("minValue");
                 int maxValue = (Integer) request.get("maxValue");
-                dataset = datasetService.generateDataset(type, size, minValue, maxValue);
+                dataset = datasetService.generateDataset(type, size, minValue, maxValue, dataType);
             } else {
-                dataset = datasetService.generateDataset(type, size);
+                dataset = datasetService.generateDataset(type, size, 1, 10000, dataType);
             }
             
             return ResponseEntity.ok(dataset);
@@ -176,6 +178,34 @@ public class DatasetController {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    /**
+     * Exports a dataset in specified format.
+     * 
+     * @param id Dataset ID
+     * @param format Export format (json or csv)
+     * @return Dataset data in requested format
+     */
+    @GetMapping("/{id}/export")
+    public ResponseEntity<Map<String, Object>> exportDataset(
+            @PathVariable String id,
+            @RequestParam(defaultValue = "json") String format) {
+        Dataset dataset = datasetService.getDataset(id);
+        if (dataset == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Map<String, Object> response = Map.of(
+            "id", dataset.getId(),
+            "name", dataset.getName(),
+            "type", dataset.getType(),
+            "dataType", dataset.getDataType(),
+            "size", dataset.getSize(),
+            "data", "STRING".equals(dataset.getDataType()) ? dataset.getStringData() : dataset.getData()
+        );
+
+        return ResponseEntity.ok(response);
     }
 }
 

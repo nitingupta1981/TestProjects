@@ -7,11 +7,11 @@ import java.util.Random;
  * Utility class for generating test datasets.
  * 
  * Provides methods to generate datasets with various characteristics:
- * - Random: Randomly generated integers
+ * - Random: Randomly generated integers or strings
  * - Sorted: Pre-sorted in ascending order
  * - Reverse Sorted: Pre-sorted in descending order
  * 
- * All generated datasets use integers in a configurable range.
+ * Supports both integer and string datasets.
  * 
  * @author Algorithm Comparison Team
  * @version 1.0
@@ -21,6 +21,12 @@ public class DatasetGenerator {
     private static final Random random = new Random();
     private static final int DEFAULT_MIN = 1;
     private static final int DEFAULT_MAX = 10000;
+    private static final String[] SAMPLE_WORDS = {
+        "apple", "banana", "cherry", "date", "elderberry", "fig", "grape", "honeydew",
+        "kiwi", "lemon", "mango", "nectarine", "orange", "papaya", "quince", "raspberry",
+        "strawberry", "tangerine", "ugli", "vanilla", "watermelon", "xigua", "yam", "zucchini",
+        "apricot", "blackberry", "cantaloupe", "dragonfruit", "eggplant", "fennel"
+    };
 
     /**
      * Generates a random dataset of specified size.
@@ -193,6 +199,83 @@ public class DatasetGenerator {
      */
     public static void setSeed(long seed) {
         random.setSeed(seed);
+    }
+
+    // ==================== String Dataset Generation ====================
+
+    /**
+     * Generates a random string dataset.
+     * 
+     * @param size Number of elements to generate
+     * @return Array of random strings
+     */
+    public static String[] generateRandomStrings(int size) {
+        if (size <= 0) {
+            return new String[0];
+        }
+
+        String[] data = new String[size];
+        for (int i = 0; i < size; i++) {
+            // Generate random strings using sample words with random suffixes
+            String word = SAMPLE_WORDS[random.nextInt(SAMPLE_WORDS.length)];
+            int suffix = random.nextInt(1000);
+            data[i] = word + "_" + suffix;
+        }
+
+        return data;
+    }
+
+    /**
+     * Generates a sorted string dataset.
+     * 
+     * @param size Number of elements to generate
+     * @return Sorted array of strings
+     */
+    public static String[] generateSortedStrings(int size) {
+        String[] data = generateRandomStrings(size);
+        Arrays.sort(data);
+        return data;
+    }
+
+    /**
+     * Generates a reverse sorted string dataset.
+     * 
+     * @param size Number of elements to generate
+     * @return Reverse sorted array of strings
+     */
+    public static String[] generateReverseSortedStrings(int size) {
+        String[] data = generateSortedStrings(size);
+        reverseStrings(data);
+        return data;
+    }
+
+    /**
+     * Reverses a string array in place.
+     * 
+     * @param data Array to reverse
+     */
+    private static void reverseStrings(String[] data) {
+        int left = 0;
+        int right = data.length - 1;
+
+        while (left < right) {
+            swapStrings(data, left, right);
+            left++;
+            right--;
+        }
+    }
+
+    /**
+     * Swaps two elements in a string array.
+     * 
+     * @param data Array containing elements
+     * @param i First index
+     * @param j Second index
+     */
+    private static void swapStrings(String[] data, int i, int j) {
+        String temp = data[i];
+        data[i] = data[j];
+        data[j] = temp;
     }
 }
 

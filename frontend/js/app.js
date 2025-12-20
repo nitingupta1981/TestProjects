@@ -47,7 +47,9 @@ const exporter = new Exporter(API_BASE_URL);
  */
 function initializeApp() {
     setupEventListeners();
+    setupTabs();
     loadDatasets();
+    visualizer.initialize();
 }
 
 /**
@@ -78,14 +80,52 @@ function setupEventListeners() {
 }
 
 /**
+ * Sets up tab navigation.
+ */
+function setupTabs() {
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetTab = btn.dataset.tab;
+            
+            // Update active button
+            tabBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // Show/hide content
+            const allContent = document.querySelectorAll('[data-tab-content]');
+            allContent.forEach(content => {
+                if (content.dataset.tabContent === targetTab) {
+                    content.classList.add('active');
+                    content.style.display = 'block';
+                } else {
+                    content.classList.remove('active');
+                    if (!content.id || !['analysis-section', 'recommendation-section', 'results-section', 'benchmark-section'].includes(content.id)) {
+                        content.style.display = 'none';
+                    }
+                }
+            });
+        });
+    });
+    
+    // Activate first tab
+    const firstTab = document.querySelector('.tab-btn[data-tab="datasets"]');
+    if (firstTab) {
+        firstTab.click();
+    }
+}
+
+/**
  * Handles dataset generation.
  */
 async function handleGenerateDataset() {
     const type = document.getElementById('dataset-type').value;
     const size = parseInt(document.getElementById('dataset-size').value);
+    const dataType = document.getElementById('data-type').value;
     
     try {
-        const dataset = await datasetManager.generateDataset(type, size);
+        const dataset = await datasetManager.generateDataset(type, size, 1, 10000, dataType);
         state.datasets.push(dataset);
         renderDatasets();
         showMessage('Dataset generated successfully!', 'success');
@@ -109,13 +149,25 @@ function renderDatasets() {
         }
         
         item.innerHTML = `
-            <strong>${dataset.name}</strong><br>
-            Type: ${dataset.type}<br>
-            Size: ${dataset.size}<br>
-            <small>ID: ${dataset.id.substring(0, 8)}...</small>
+            <div style="flex: 1;">
+                <strong>${dataset.name}</strong><br>
+                Type: ${dataset.type} | Data: ${dataset.dataType || 'INTEGER'}<br>
+                Size: ${dataset.size}<br>
+                <small>ID: ${dataset.id.substring(0, 8)}...</small>
+            </div>
+            <div class="dataset-actions">
+                <button class="btn-small btn-info" onclick="viewDataset('${dataset.id}')">View</button>
+                <button class="btn-small btn-warning" onclick="exportDataset('${dataset.id}')">Export</button>
+                <button class="btn-small btn-danger" onclick="deleteDataset('${dataset.id}')">Delete</button>
+            </div>
         `;
         
-        item.addEventListener('click', () => toggleDatasetSelection(dataset.id));
+        item.addEventListener('click', (e) => {
+            // Don't toggle selection if clicking on buttons
+            if (!e.target.classList.contains('btn-small')) {
+                toggleDatasetSelection(dataset.id);
+            }
+        });
         container.appendChild(item);
     });
 }
@@ -384,27 +436,26 @@ function handleExport(format) {
  * Handles visualization.
  */
 async function handleVisualize() {
-    if (state.selectedDatasets.length === 0) {
-        showMessage('Please select a dataset', 'error');
-        return;
+    // Switch to visualization tab
+    const visTab = document.querySelector('.tab-btn[data-tab="visualization"]');
+    if (visTab) {
+        visTab.click();
+    }
+    
+    // If datasets and algorithms are selected, pre-populate
+    if (state.selectedDatasets.length > 0) {
+        const datasetSelect = document.getElementById('vis-dataset-select');
+        if (datasetSelect) {
+            datasetSelect.value = state.selectedDatasets[0];
+        }
     }
     
     const selectedAlgorithms = getSelectedAlgorithms();
-    if (selectedAlgorithms.length === 0) {
-        showMessage('Please select an algorithm to visualize', 'error');
-        return;
-    }
-    
-    try {
-        const section = document.getElementById('visualization-section');
-        section.style.display = 'block';
-        
-        await visualizer.visualizeAlgorithm(
-            state.selectedDatasets[0],
-            selectedAlgorithms[0]
-        );
-    } catch (error) {
-        showMessage('Error visualizing algorithm: ' + error.message, 'error');
+    if (selectedAlgorithms.length > 0) {
+        const algorithmSelect = document.getElementById('vis-algorithm-select');
+        if (algorithmSelect) {
+            algorithmSelect.value = selectedAlgorithms[0];
+        }
     }
 }
 
@@ -431,6 +482,84 @@ function showMessage(message, type) {
         alert(message);
     }
 }
+
+/**
+ * Views a dataset's contents.
+ */
+async function viewDataset(datasetId) {
+    try {
+        const data = await datasetManager.exportDataset(datasetId);
+        const content = JSON.stringify(data, null, 2);
+        
+        // Create modal to display dataset
+        const modal = document.createElement('div');
+        modal.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border:2px solid #333;z-index:1000;max-height:80vh;overflow:auto;box-shadow:0 4px 6px rgba(0,0,0,0.3);';
+        modal.innerHTML = `
+            <h3>Dataset: ${data.name}</h3>
+            <p>Type: ${data.type} | Data Type: ${data.dataType} | Size: ${data.size}</p>
+            <pre style="background:#f5f5f5;padding:10px;border-radius:4px;max-height:400px;overflow:auto;">${JSON.stringify(data.data, null, 2)}</pre>
+            <button onclick="this.parentElement.remove();document.getElementById('modal-overlay').remove();" class="btn btn-secondary">Close</button>
+        `;
+        
+        const overlay = document.createElement('div');
+        overlay.id = 'modal-overlay';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:999;';
+        overlay.onclick = () => { modal.remove(); overlay.remove(); };
+        
+        document.body.appendChild(overlay);
+        document.body.appendChild(modal);
+    } catch (error) {
+        showMessage('Error viewing dataset: ' + error.message, 'error');
+    }
+}
+
+/**
+ * Exports a dataset.
+ */
+async function exportDataset(datasetId) {
+    try {
+        const data = await datasetManager.exportDataset(datasetId);
+        const jsonStr = JSON.stringify(data, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${data.name}_${data.id.substring(0, 8)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showMessage('Dataset exported successfully!', 'success');
+    } catch (error) {
+        showMessage('Error exporting dataset: ' + error.message, 'error');
+    }
+}
+
+/**
+ * Deletes a dataset.
+ */
+async function deleteDataset(datasetId) {
+    if (!confirm('Are you sure you want to delete this dataset?')) {
+        return;
+    }
+    
+    try {
+        const success = await datasetManager.deleteDataset(datasetId);
+        if (success) {
+            state.datasets = state.datasets.filter(d => d.id !== datasetId);
+            state.selectedDatasets = state.selectedDatasets.filter(id => id !== datasetId);
+            renderDatasets();
+            showMessage('Dataset deleted successfully!', 'success');
+        } else {
+            showMessage('Failed to delete dataset', 'error');
+        }
+    } catch (error) {
+        showMessage('Error deleting dataset: ' + error.message, 'error');
+    }
+}
+
+// Make functions available globally for onclick handlers
+window.viewDataset = viewDataset;
+window.exportDataset = exportDataset;
+window.deleteDataset = deleteDataset;
 
 // Initialize the application when DOM is ready
 if (document.readyState === 'loading') {

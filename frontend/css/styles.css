@@ -38,6 +38,48 @@ header h1 {
     opacity: 0.9;
 }
 
+/* Tab Navigation */
+.tab-navigation {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    border-radius: 12px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 15px 20px;
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 1.1em;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.tab-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.tab-btn.active {
+    background: white;
+    color: #667eea;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
 /* Card Sections */
 .card {
     background: white;
@@ -139,6 +181,27 @@ select:focus {
     color: #333;
 }
 
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-small {
+    padding: 6px 12px;
+    font-size: 0.85em;
+    margin: 2px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-small:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 /* Algorithms Grid */
 .algorithms-grid {
     display: grid;
@@ -187,6 +250,15 @@ select:focus {
     padding: 15px;
     cursor: pointer;
     transition: all 0.3s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dataset-actions {
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
 }
 
 .dataset-item:hover {
@@ -319,12 +391,63 @@ select:focus {
 }
 
 /* Visualization */
+.visualization-setup,
+.visualization-player {
+    margin: 20px 0;
+}
+
+.visualization-player {
+    text-align: center;
+}
+
+#visualization-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.speed-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    margin: 15px 0;
+}
+
+.speed-control input[type="range"] {
+    width: 200px;
+}
+
+.step-info {
+    text-align: center;
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #667eea;
+    margin: 10px 0;
+}
+
 #visualization-canvas {
     width: 100%;
-    max-width: 800px;
-    border: 2px solid #667eea;
+    max-width: 900px;
+    height: 450px;
+    border: 3px solid #667eea;
     border-radius: 8px;
-    margin: 20px 0;
+    margin: 20px auto;
+    display: block;
+    background: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.vis-description {
+    background: #f8f9fa;
+    border-left: 4px solid #667eea;
+    padding: 15px;
+    margin-top: 15px;
+    border-radius: 4px;
+    font-size: 1.05em;
+}
     background: white;
 }
 

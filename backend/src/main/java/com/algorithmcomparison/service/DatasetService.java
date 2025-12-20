@@ -33,30 +33,62 @@ public class DatasetService {
      * 
      * @param type Dataset type: RANDOM, SORTED, or REVERSE_SORTED
      * @param size Number of elements
+     * @param minValue Minimum value range (for integers)
+     * @param maxValue Maximum value range (for integers)
+     * @param dataType Data type: INTEGER or STRING
+     * @return Generated dataset
+     */
+    public Dataset generateDataset(String type, int size, int minValue, int maxValue, String dataType) {
+        Dataset dataset;
+        
+        if ("STRING".equalsIgnoreCase(dataType)) {
+            String[] data;
+            switch (type.toUpperCase()) {
+                case "SORTED":
+                    data = DatasetGenerator.generateSortedStrings(size);
+                    break;
+                case "REVERSE_SORTED":
+                    data = DatasetGenerator.generateReverseSortedStrings(size);
+                    break;
+                case "RANDOM":
+                default:
+                    data = DatasetGenerator.generateRandomStrings(size);
+                    break;
+            }
+            dataset = new Dataset(data, type.toUpperCase());
+        } else {
+            // Default to INTEGER
+            int[] data;
+            switch (type.toUpperCase()) {
+                case "SORTED":
+                    data = DatasetGenerator.generateSorted(size, minValue, maxValue);
+                    break;
+                case "REVERSE_SORTED":
+                    data = DatasetGenerator.generateReverseSorted(size, minValue, maxValue);
+                    break;
+                case "RANDOM":
+                default:
+                    data = DatasetGenerator.generateRandom(size, minValue, maxValue);
+                    break;
+            }
+            dataset = new Dataset(data, type.toUpperCase());
+        }
+
+        datasetStore.put(dataset.getId(), dataset);
+        return dataset;
+    }
+
+    /**
+     * Generates a new dataset based on type and size (backwards compatible).
+     * 
+     * @param type Dataset type: RANDOM, SORTED, or REVERSE_SORTED
+     * @param size Number of elements
      * @param minValue Minimum value range
      * @param maxValue Maximum value range
      * @return Generated dataset
      */
     public Dataset generateDataset(String type, int size, int minValue, int maxValue) {
-        int[] data;
-        
-        switch (type.toUpperCase()) {
-            case "SORTED":
-                data = DatasetGenerator.generateSorted(size, minValue, maxValue);
-                break;
-            case "REVERSE_SORTED":
-                data = DatasetGenerator.generateReverseSorted(size, minValue, maxValue);
-                break;
-            case "RANDOM":
-            default:
-                data = DatasetGenerator.generateRandom(size, minValue, maxValue);
-                break;
-        }
-
-        Dataset dataset = new Dataset(data, type.toUpperCase());
-        datasetStore.put(dataset.getId(), dataset);
-        
-        return dataset;
+        return generateDataset(type, size, minValue, maxValue, "INTEGER");
     }
 
     /**

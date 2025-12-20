@@ -8,11 +8,11 @@ export class DatasetManager {
         this.apiBaseUrl = apiBaseUrl;
     }
 
-    async generateDataset(type, size, minValue = 1, maxValue = 10000) {
+    async generateDataset(type, size, minValue = 1, maxValue = 10000, dataType = 'INTEGER') {
         const response = await fetch(`${this.apiBaseUrl}/datasets/generate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type, size, minValue, maxValue })
+            body: JSON.stringify({ type, size, minValue, maxValue, dataType })
         });
         
         if (!response.ok) {
@@ -62,6 +62,16 @@ export class DatasetManager {
         });
         
         return response.ok;
+    }
+
+    async exportDataset(datasetId, format = 'json') {
+        const response = await fetch(`${this.apiBaseUrl}/datasets/${datasetId}/export?format=${format}`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to export dataset');
+        }
+        
+        return await response.json();
     }
 }
 
