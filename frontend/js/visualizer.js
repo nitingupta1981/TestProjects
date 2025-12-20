@@ -71,24 +71,51 @@ export class Visualizer {
         
         if (typeSelect && algorithmSelect) {
             typeSelect.addEventListener('change', () => {
-                const type = typeSelect.value;
-                algorithmSelect.innerHTML = '';
-                
-                const algorithms = type === 'SEARCH' ? this.searchingAlgorithms : this.sortingAlgorithms;
-                algorithms.forEach(algo => {
-                    const option = document.createElement('option');
-                    option.value = algo;
-                    option.textContent = algo;
-                    algorithmSelect.appendChild(option);
-                });
-                
-                if (searchTargetGroup) {
-                    searchTargetGroup.style.display = type === 'SEARCH' ? 'block' : 'none';
-                }
+                this.populateAlgorithmOptions();
             });
             
             // Trigger initial population
-            typeSelect.dispatchEvent(new Event('change'));
+            this.populateAlgorithmOptions();
+        }
+    }
+
+    populateAlgorithmOptions(comparedAlgorithms = null) {
+        const typeSelect = document.getElementById('vis-algorithm-type');
+        const algorithmSelect = document.getElementById('vis-algorithm-select');
+        const searchTargetGroup = document.getElementById('vis-search-target-group');
+        
+        if (!typeSelect || !algorithmSelect) return;
+        
+        const type = typeSelect.value;
+        algorithmSelect.innerHTML = '';
+        
+        // Get algorithm list based on type
+        let algorithms = type === 'SEARCH' ? this.searchingAlgorithms : this.sortingAlgorithms;
+        
+        // Filter by compared algorithms if available (from app state)
+        if (comparedAlgorithms && comparedAlgorithms.length > 0) {
+            algorithms = algorithms.filter(algo => comparedAlgorithms.includes(algo));
+        }
+        
+        // Populate dropdown
+        if (algorithms.length === 0) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'Run a comparison first to enable visualization';
+            option.disabled = true;
+            option.selected = true;
+            algorithmSelect.appendChild(option);
+        } else {
+            algorithms.forEach(algo => {
+                const option = document.createElement('option');
+                option.value = algo;
+                option.textContent = algo;
+                algorithmSelect.appendChild(option);
+            });
+        }
+        
+        if (searchTargetGroup) {
+            searchTargetGroup.style.display = type === 'SEARCH' ? 'block' : 'none';
         }
     }
 
@@ -100,12 +127,24 @@ export class Visualizer {
             const select = document.getElementById('vis-dataset-select');
             if (select) {
                 select.innerHTML = '';
-                datasets.forEach(dataset => {
+                
+                if (datasets.length === 0) {
+                    // No datasets available
                     const option = document.createElement('option');
-                    option.value = dataset.id;
-                    option.textContent = `${dataset.name} (${dataset.size} elements)`;
+                    option.value = '';
+                    option.textContent = 'No datasets available - Generate one first';
+                    option.disabled = true;
+                    option.selected = true;
                     select.appendChild(option);
-                });
+                } else {
+                    // Add datasets to dropdown
+                    datasets.forEach(dataset => {
+                        const option = document.createElement('option');
+                        option.value = dataset.id;
+                        option.textContent = `${dataset.name} (${dataset.size} elements)`;
+                        select.appendChild(option);
+                    });
+                }
             }
         } catch (error) {
             console.error('Error loading datasets:', error);
@@ -147,12 +186,25 @@ export class Visualizer {
             this.steps = await response.json();
             this.currentStep = 0;
             
+            // Check if this is a limited visualization (only 2 steps = start and end)
+            if (this.steps.length <= 2 && algorithmName !== 'Bubble Sort') {
+                const continueVis = confirm(
+                    `Note: Full step-by-step visualization is currently only available for Bubble Sort.\n\n` +
+                    `${algorithmName} will show only the initial and final states.\n\n` +
+                    `Continue with limited visualization?`
+                );
+                if (!continueVis) {
+                    return;
+                }
+            }
+            
             // Show the player, hide setup
             document.getElementById('visualization-setup').style.display = 'none';
             document.getElementById('visualization-player').style.display = 'block';
             
             this.updateStepCounter();
             this.drawStep(this.steps[0]);
+            this.updateButtonStates(); // Initialize button states
             
         } catch (error) {
             console.error('Error loading visualization:', error);
@@ -207,16 +259,15 @@ export class Visualizer {
             ctx.lineWidth = 1;
             ctx.strokeRect(x, y, barWidth - 4, barHeight);
             
-            // Draw value
-            ctx.fillStyle = '#000';
-            ctx.font = 'bold 14px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(value, x + (barWidth - 4) / 2, canvas.height - 10);
+            // Draw value on top of bar (only if bar is wide enough)
+            if (barWidth > 30) {
+                ctx.fillStyle = '#000';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(value, x + (barWidth - 4) / 2, canvas.height - barHeight - 35);
+            }
             
-            // Draw index
-            ctx.fillStyle = '#666';
-            ctx.font = '10px Arial';
-            ctx.fillText(index, x + (barWidth - 4) / 2, canvas.height - 2);
+            // Don't draw index numbers on x-axis (removed to reduce clutter)
         });
         
         // Update description
@@ -238,8 +289,34 @@ export class Visualizer {
         }
     }
 
+    updateButtonStates() {
+        const playBtn = document.getElementById('play-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const stepForwardBtn = document.getElementById('step-forward-btn');
+        const stepBackwardBtn = document.getElementById('step-backward-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        
+        if (this.isPlaying) {
+            // During playback
+            if (playBtn) playBtn.disabled = true;
+            if (pauseBtn) pauseBtn.disabled = false;
+            if (stepForwardBtn) stepForwardBtn.disabled = true;
+            if (stepBackwardBtn) stepBackwardBtn.disabled = true;
+            if (resetBtn) resetBtn.disabled = true;
+        } else {
+            // When paused or stopped
+            if (playBtn) playBtn.disabled = false;
+            if (pauseBtn) pauseBtn.disabled = true;
+            if (stepForwardBtn) stepForwardBtn.disabled = false;
+            if (stepBackwardBtn) stepBackwardBtn.disabled = false;
+            if (resetBtn) resetBtn.disabled = false;
+        }
+    }
+
     play() {
+        if (this.isPlaying) return; // Prevent multiple simultaneous plays
         this.isPlaying = true;
+        this.updateButtonStates();
         this.animate();
     }
 
@@ -249,6 +326,7 @@ export class Visualizer {
             clearTimeout(this.animationTimeout);
             this.animationTimeout = null;
         }
+        this.updateButtonStates();
     }
 
     reset() {
@@ -261,6 +339,7 @@ export class Visualizer {
         if (this.steps.length > 0) {
             this.drawStep(this.steps[0]);
         }
+        this.updateButtonStates();
     }
 
     stepForward() {
@@ -290,6 +369,7 @@ export class Visualizer {
     animate() {
         if (!this.isPlaying || this.currentStep >= this.steps.length) {
             this.isPlaying = false;
+            this.updateButtonStates();
             return;
         }
         
@@ -300,6 +380,7 @@ export class Visualizer {
         if (this.currentStep >= this.steps.length) {
             this.isPlaying = false;
             this.currentStep = this.steps.length - 1;
+            this.updateButtonStates();
             return;
         }
         

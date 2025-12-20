@@ -29,7 +29,8 @@ const state = {
     selectedDatasets: [],
     currentResults: [],
     currentBenchmark: null,
-    operationType: 'SORT'
+    operationType: 'SORT',
+    comparedAlgorithms: [] // Track algorithms used in last comparison
 };
 
 // Initialize modules
@@ -110,6 +111,13 @@ function setupTabs() {
                     }
                 }
             });
+            
+            // Refresh dataset options when switching to visualization tab
+            if (targetTab === 'visualization') {
+                visualizer.loadDatasetOptions();
+                // Update algorithm options with compared algorithms
+                visualizer.populateAlgorithmOptions(state.comparedAlgorithms);
+            }
         });
     });
     
@@ -132,6 +140,10 @@ async function handleGenerateDataset() {
         const dataset = await datasetManager.generateDataset(type, size, 1, 10000, dataType);
         state.datasets.push(dataset);
         renderDatasets();
+        
+        // Update visualization dropdown with new dataset
+        visualizer.loadDatasetOptions();
+        
         showMessage('Dataset generated successfully!', 'success');
     } catch (error) {
         showMessage('Error generating dataset: ' + error.message, 'error');
@@ -370,6 +382,10 @@ async function handleRunComparison() {
         }
         
         state.currentResults = results;
+        
+        // Store compared algorithms for visualization filtering
+        state.comparedAlgorithms = selectedAlgorithms;
+        
         displayResults(results);
         showMessage('Comparison complete!', 'success');
     } catch (error) {
@@ -485,6 +501,9 @@ async function loadDatasets() {
     try {
         state.datasets = await datasetManager.getAllDatasets();
         renderDatasets();
+        
+        // Update visualization dropdown
+        visualizer.loadDatasetOptions();
     } catch (error) {
         console.error('Error loading datasets:', error);
     }
@@ -566,6 +585,10 @@ async function deleteDataset(datasetId) {
             state.datasets = state.datasets.filter(d => d.id !== datasetId);
             state.selectedDatasets = state.selectedDatasets.filter(id => id !== datasetId);
             renderDatasets();
+            
+            // Update visualization dropdown
+            visualizer.loadDatasetOptions();
+            
             showMessage('Dataset deleted successfully!', 'success');
         } else {
             showMessage('Failed to delete dataset', 'error');
