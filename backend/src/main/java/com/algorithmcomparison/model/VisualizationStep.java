@@ -1,0 +1,158 @@
+package com.algorithmcomparison.model;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+/**
+ * Represents a single step in algorithm visualization.
+ * 
+ * Captures the state of the array/data structure at a specific point
+ * during algorithm execution, along with highlighted elements and operation type.
+ * 
+ * @author Algorithm Comparison Team
+ * @version 1.0
+ */
+public class VisualizationStep {
+    
+    private int stepNumber;
+    private int[] arrayState;
+    private String operation; // e.g., "COMPARE", "SWAP", "INSERT", "PIVOT", "FOUND"
+    private List<Integer> highlightedIndices;
+    private String description;
+    private List<String> colors; // Color codes for highlighted indices
+
+    /**
+     * Default constructor.
+     */
+    public VisualizationStep() {
+        this.highlightedIndices = new ArrayList<>();
+        this.colors = new ArrayList<>();
+    }
+
+    /**
+     * Constructor with step number and array state.
+     * 
+     * @param stepNumber The step number in the visualization sequence
+     * @param arrayState Current state of the array
+     * @param operation Type of operation being performed
+     */
+    public VisualizationStep(int stepNumber, int[] arrayState, String operation) {
+        this();
+        this.stepNumber = stepNumber;
+        this.arrayState = Arrays.copyOf(arrayState, arrayState.length);
+        this.operation = operation;
+    }
+
+    /**
+     * Constructor with description.
+     * 
+     * @param stepNumber The step number
+     * @param arrayState Current array state
+     * @param operation Operation type
+     * @param description Human-readable description of the step
+     */
+    public VisualizationStep(int stepNumber, int[] arrayState, String operation, String description) {
+        this(stepNumber, arrayState, operation);
+        this.description = description;
+    }
+
+    // Getters and Setters
+
+    public int getStepNumber() {
+        return stepNumber;
+    }
+
+    public void setStepNumber(int stepNumber) {
+        this.stepNumber = stepNumber;
+    }
+
+    public int[] getArrayState() {
+        return arrayState;
+    }
+
+    public void setArrayState(int[] arrayState) {
+        this.arrayState = arrayState;
+    }
+
+    public String getOperation() {
+        return operation;
+    }
+
+    public void setOperation(String operation) {
+        this.operation = operation;
+    }
+
+    public List<Integer> getHighlightedIndices() {
+        return highlightedIndices;
+    }
+
+    public void setHighlightedIndices(List<Integer> highlightedIndices) {
+        this.highlightedIndices = highlightedIndices;
+    }
+
+    /**
+     * Adds an index to be highlighted in the visualization.
+     * 
+     * @param index The array index to highlight
+     */
+    public void addHighlightedIndex(int index) {
+        this.highlightedIndices.add(index);
+    }
+
+    /**
+     * Adds an index with a specific color.
+     * 
+     * @param index The array index
+     * @param color The color code (e.g., "RED", "GREEN", "YELLOW")
+     */
+    public void addHighlightedIndex(int index, String color) {
+        this.highlightedIndices.add(index);
+        this.colors.add(color);
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public List<String> getColors() {
+        return colors;
+    }
+
+    public void setColors(List<String> colors) {
+        this.colors = colors;
+    }
+
+    /**
+     * Creates a copy of this visualization step.
+     * 
+     * @return A new VisualizationStep with copied data
+     */
+    public VisualizationStep copy() {
+        VisualizationStep copy = new VisualizationStep(
+            this.stepNumber, 
+            Arrays.copyOf(this.arrayState, this.arrayState.length),
+            this.operation,
+            this.description
+        );
+        copy.setHighlightedIndices(new ArrayList<>(this.highlightedIndices));
+        copy.setColors(new ArrayList<>(this.colors));
+        return copy;
+    }
+
+    @Override
+    public String toString() {
+        return "VisualizationStep{" +
+                "stepNumber=" + stepNumber +
+                ", operation='" + operation + '\'' +
+                ", highlightedIndices=" + highlightedIndices +
+                ", description='" + description + '\'' +
+                ", arrayState=" + Arrays.toString(arrayState) +
+                '}';
+    }
+}
+
