@@ -1,6 +1,7 @@
 package com.algorithmcomparison.algorithm.sorting;
 
 import com.algorithmcomparison.util.MetricsCollector;
+import com.algorithmcomparison.util.StepCollector;
 
 /**
  * Insertion Sort implementation.
@@ -22,7 +23,30 @@ public class InsertionSort implements SortingAlgorithm {
 
     @Override
     public void sort(int[] array, MetricsCollector metrics) {
+        sortInternal(array, metrics, null);
+    }
+
+    /**
+     * Sorts the array with optional step collection for visualization.
+     * 
+     * @param array The array to sort
+     * @param metrics The metrics collector
+     * @param stepCollector Optional step collector for visualization (null for normal sorting)
+     */
+    public void sortWithSteps(int[] array, MetricsCollector metrics, StepCollector stepCollector) {
+        sortInternal(array, metrics, stepCollector);
+    }
+
+    /**
+     * Internal sort implementation that optionally collects steps.
+     */
+    private void sortInternal(int[] array, MetricsCollector metrics, StepCollector stepCollector) {
         int n = array.length;
+        
+        // Record initial state if collecting steps
+        if (stepCollector != null) {
+            stepCollector.recordInitial(array, "Initial array state");
+        }
         
         // Outer loop: pick each element starting from index 1
         // The first element (index 0) is considered already sorted
@@ -30,12 +54,25 @@ public class InsertionSort implements SortingAlgorithm {
             int key = array[i]; // Element to be inserted
             int j = i - 1;
             
+            // Record picking element if collecting steps
+            if (stepCollector != null) {
+                stepCollector.recordCompare(array, i, i, 
+                    "Picking element " + key + " at index " + i + " to insert into sorted portion");
+            }
+            
             // Inner loop: shift elements of sorted portion that are greater than key
             // Move elements one position to the right to make space for key
             while (j >= 0 && metrics.isGreaterThan(array[j], key)) {
                 // Shift element to the right
                 array[j + 1] = array[j];
                 metrics.recordArrayAccess(2); // One read, one write
+                
+                // Record the shift if collecting steps
+                if (stepCollector != null) {
+                    stepCollector.recordSwap(array, j + 1, j + 1,
+                        "Shifting " + array[j + 1] + " right to position " + (j + 1));
+                }
+                
                 j--;
             }
             
@@ -43,10 +80,21 @@ public class InsertionSort implements SortingAlgorithm {
             array[j + 1] = key;
             metrics.recordArrayAccess(1);
             
+            // Record insertion if collecting steps
+            if (stepCollector != null) {
+                stepCollector.recordSwap(array, j + 1, j + 1,
+                    "Inserted " + key + " at position " + (j + 1));
+            }
+            
             // If key wasn't moved, no swap occurred
             if (j + 1 != i) {
                 metrics.recordSwap(1);
             }
+        }
+        
+        // Record completion if collecting steps
+        if (stepCollector != null) {
+            stepCollector.recordComplete(array, "Sorting complete!");
         }
     }
 

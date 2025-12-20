@@ -3,6 +3,8 @@ package com.algorithmcomparison.service;
 import com.algorithmcomparison.model.VisualizationStep;
 import com.algorithmcomparison.model.Dataset;
 import com.algorithmcomparison.algorithm.sorting.BubbleSort;
+import com.algorithmcomparison.algorithm.sorting.InsertionSort;
+import com.algorithmcomparison.algorithm.sorting.SelectionSort;
 import com.algorithmcomparison.util.MetricsCollector;
 import com.algorithmcomparison.util.StepCollector;
 import org.springframework.stereotype.Service;
@@ -77,7 +79,6 @@ public class VisualizationService {
 
     /**
      * Generates visualization steps for a generic algorithm.
-     * Placeholder method that returns basic steps.
      * 
      * @param datasetId The dataset ID
      * @param algorithmName The algorithm name
@@ -86,9 +87,13 @@ public class VisualizationService {
      * @throws UnsupportedOperationException if dataset type is not INTEGER
      */
     public List<VisualizationStep> visualizeAlgorithm(String datasetId, String algorithmName) {
-        // For now, only Bubble Sort is fully implemented
+        // Check if algorithm has full visualization support
         if (algorithmName.equalsIgnoreCase("Bubble Sort")) {
             return visualizeBubbleSort(datasetId);
+        } else if (algorithmName.equalsIgnoreCase("Insertion Sort")) {
+            return visualizeInsertionSort(datasetId);
+        } else if (algorithmName.equalsIgnoreCase("Selection Sort")) {
+            return visualizeSelectionSort(datasetId);
         }
 
         // Return basic visualization for other algorithms
@@ -125,6 +130,72 @@ public class VisualizationService {
         steps.add(finalStep);
 
         return steps;
+    }
+
+    /**
+     * Generates visualization steps for Insertion Sort algorithm.
+     * 
+     * @param datasetId The dataset ID
+     * @return List of visualization steps
+     */
+    private List<VisualizationStep> visualizeInsertionSort(String datasetId) {
+        Dataset dataset = datasetService.getDataset(datasetId);
+        if (dataset == null) {
+            throw new IllegalArgumentException("Dataset not found: " + datasetId);
+        }
+
+        if ("STRING".equals(dataset.getDataType())) {
+            throw new UnsupportedOperationException(
+                "Visualization is currently only supported for INTEGER datasets. " +
+                "Dataset '" + dataset.getName() + "' is of type STRING."
+            );
+        }
+
+        if (dataset.getData() == null) {
+            throw new IllegalStateException("Dataset has no data to visualize");
+        }
+
+        int[] array = Arrays.copyOf(dataset.getData(), dataset.getData().length);
+        MetricsCollector metrics = new MetricsCollector();
+        StepCollector stepCollector = new StepCollector();
+        
+        InsertionSort insertionSort = new InsertionSort();
+        insertionSort.sortWithSteps(array, metrics, stepCollector);
+        
+        return stepCollector.getSteps();
+    }
+
+    /**
+     * Generates visualization steps for Selection Sort algorithm.
+     * 
+     * @param datasetId The dataset ID
+     * @return List of visualization steps
+     */
+    private List<VisualizationStep> visualizeSelectionSort(String datasetId) {
+        Dataset dataset = datasetService.getDataset(datasetId);
+        if (dataset == null) {
+            throw new IllegalArgumentException("Dataset not found: " + datasetId);
+        }
+
+        if ("STRING".equals(dataset.getDataType())) {
+            throw new UnsupportedOperationException(
+                "Visualization is currently only supported for INTEGER datasets. " +
+                "Dataset '" + dataset.getName() + "' is of type STRING."
+            );
+        }
+
+        if (dataset.getData() == null) {
+            throw new IllegalStateException("Dataset has no data to visualize");
+        }
+
+        int[] array = Arrays.copyOf(dataset.getData(), dataset.getData().length);
+        MetricsCollector metrics = new MetricsCollector();
+        StepCollector stepCollector = new StepCollector();
+        
+        SelectionSort selectionSort = new SelectionSort();
+        selectionSort.sortWithSteps(array, metrics, stepCollector);
+        
+        return stepCollector.getSteps();
     }
 
     /**
