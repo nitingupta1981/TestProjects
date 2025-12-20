@@ -1,6 +1,5 @@
 package com.algorithmcomparison.algorithm.sorting;
 
-import com.algorithmcomparison.model.AlgorithmResult;
 import com.algorithmcomparison.util.MetricsCollector;
 
 /**
