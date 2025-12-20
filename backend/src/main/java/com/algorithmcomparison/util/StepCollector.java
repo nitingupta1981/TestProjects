@@ -11,6 +11,8 @@ import java.util.List;
  * Algorithms can optionally use this to record their steps for visualization.
  * The collector just stores snapshots - it doesn't modify anything.
  * 
+ * Supports both sorting and searching algorithms.
+ * 
  * @author Algorithm Comparison Team
  * @version 1.0
  */
@@ -38,7 +40,7 @@ public class StepCollector {
     }
     
     /**
-     * Records a comparison.
+     * Records a comparison (for sorting).
      */
     public void recordCompare(int[] array, int index1, int index2, String description) {
         VisualizationStep step = new VisualizationStep(
@@ -64,6 +66,47 @@ public class StepCollector {
         step.setDescription(description);
         step.addHighlightedIndex(index1, "YELLOW");
         step.addHighlightedIndex(index2, "YELLOW");
+        steps.add(step);
+    }
+    
+    /**
+     * Records checking an element (for search algorithms).
+     */
+    public void recordCheck(int[] array, int index, String description) {
+        VisualizationStep step = new VisualizationStep(
+            stepNumber++, 
+            Arrays.copyOf(array, array.length), 
+            "CHECK"
+        );
+        step.setDescription(description);
+        step.addHighlightedIndex(index, "BLUE");
+        steps.add(step);
+    }
+    
+    /**
+     * Records finding the target (for search algorithms).
+     */
+    public void recordFound(int[] array, int index, String description) {
+        VisualizationStep step = new VisualizationStep(
+            stepNumber++, 
+            Arrays.copyOf(array, array.length), 
+            "FOUND"
+        );
+        step.setDescription(description);
+        step.addHighlightedIndex(index, "GREEN");
+        steps.add(step);
+    }
+    
+    /**
+     * Records not finding the target (for search algorithms).
+     */
+    public void recordNotFound(int[] array, String description) {
+        VisualizationStep step = new VisualizationStep(
+            stepNumber++, 
+            Arrays.copyOf(array, array.length), 
+            "NOT_FOUND"
+        );
+        step.setDescription(description);
         steps.add(step);
     }
     

@@ -1,6 +1,7 @@
 package com.algorithmcomparison.algorithm.searching;
 
 import com.algorithmcomparison.util.MetricsCollector;
+import com.algorithmcomparison.util.StepCollector;
 
 /**
  * Linear Search implementation.
@@ -30,18 +31,58 @@ public class LinearSearch implements SearchingAlgorithm {
 
     @Override
     public int search(int[] array, int target, MetricsCollector metrics) {
+        return searchInternal(array, target, metrics, null);
+    }
+
+    /**
+     * Searches the array with optional step collection for visualization.
+     * 
+     * @param array The array to search
+     * @param target The target value to find
+     * @param metrics The metrics collector
+     * @param stepCollector Optional step collector for visualization (null for normal search)
+     * @return Index of target if found, -1 otherwise
+     */
+    public int searchWithSteps(int[] array, int target, MetricsCollector metrics, StepCollector stepCollector) {
+        return searchInternal(array, target, metrics, stepCollector);
+    }
+
+    /**
+     * Internal search implementation that optionally collects steps.
+     */
+    private int searchInternal(int[] array, int target, MetricsCollector metrics, StepCollector stepCollector) {
+        // Record initial state if collecting steps
+        if (stepCollector != null) {
+            stepCollector.recordInitial(array, "Starting Linear Search for target: " + target);
+        }
+        
         // Iterate through each element sequentially
         for (int i = 0; i < array.length; i++) {
             metrics.recordArrayAccess(1); // Count array access
             
+            // Record checking this element if collecting steps
+            if (stepCollector != null) {
+                stepCollector.recordCheck(array, i, 
+                    "Checking index " + i + ": Is " + array[i] + " == " + target + "?");
+            }
+            
             // Compare current element with target
             if (metrics.isEqual(array[i], target)) {
                 // Target found at index i
+                if (stepCollector != null) {
+                    stepCollector.recordFound(array, i,
+                        "Target " + target + " found at index " + i + "!");
+                }
                 return i;
             }
         }
         
         // Target not found in array
+        if (stepCollector != null) {
+            stepCollector.recordNotFound(array,
+                "Target " + target + " not found in the array");
+        }
+        
         return -1;
     }
 

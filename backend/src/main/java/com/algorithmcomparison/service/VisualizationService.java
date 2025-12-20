@@ -5,6 +5,7 @@ import com.algorithmcomparison.model.Dataset;
 import com.algorithmcomparison.algorithm.sorting.BubbleSort;
 import com.algorithmcomparison.algorithm.sorting.InsertionSort;
 import com.algorithmcomparison.algorithm.sorting.SelectionSort;
+import com.algorithmcomparison.algorithm.searching.LinearSearch;
 import com.algorithmcomparison.util.MetricsCollector;
 import com.algorithmcomparison.util.StepCollector;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,8 @@ import java.util.*;
  * 
  * This service calls the actual algorithm implementations with a StepCollector
  * to gather visualization steps. No algorithm logic is duplicated here.
+ * 
+ * Supports both sorting and searching algorithms.
  * 
  * @author Algorithm Comparison Team
  * @version 2.0
@@ -82,11 +85,12 @@ public class VisualizationService {
      * 
      * @param datasetId The dataset ID
      * @param algorithmName The algorithm name
+     * @param target Optional target value for search algorithms (null for sorting)
      * @return List of visualization steps
      * @throws IllegalArgumentException if dataset not found
      * @throws UnsupportedOperationException if dataset type is not INTEGER
      */
-    public List<VisualizationStep> visualizeAlgorithm(String datasetId, String algorithmName) {
+    public List<VisualizationStep> visualizeAlgorithm(String datasetId, String algorithmName, Integer target) {
         // Check if algorithm has full visualization support
         if (algorithmName.equalsIgnoreCase("Bubble Sort")) {
             return visualizeBubbleSort(datasetId);
@@ -94,6 +98,8 @@ public class VisualizationService {
             return visualizeInsertionSort(datasetId);
         } else if (algorithmName.equalsIgnoreCase("Selection Sort")) {
             return visualizeSelectionSort(datasetId);
+        } else if (algorithmName.equalsIgnoreCase("Linear Search")) {
+            return visualizeLinearSearch(datasetId, target);
         }
 
         // Return basic visualization for other algorithms
@@ -194,6 +200,43 @@ public class VisualizationService {
         
         SelectionSort selectionSort = new SelectionSort();
         selectionSort.sortWithSteps(array, metrics, stepCollector);
+        
+        return stepCollector.getSteps();
+    }
+
+    /**
+     * Generates visualization steps for Linear Search algorithm.
+     * 
+     * @param datasetId The dataset ID
+     * @param target Optional target value to search for (if null, uses middle element)
+     * @return List of visualization steps
+     */
+    private List<VisualizationStep> visualizeLinearSearch(String datasetId, Integer target) {
+        Dataset dataset = datasetService.getDataset(datasetId);
+        if (dataset == null) {
+            throw new IllegalArgumentException("Dataset not found: " + datasetId);
+        }
+
+        if ("STRING".equals(dataset.getDataType())) {
+            throw new UnsupportedOperationException(
+                "Visualization is currently only supported for INTEGER datasets. " +
+                "Dataset '" + dataset.getName() + "' is of type STRING."
+            );
+        }
+
+        if (dataset.getData() == null) {
+            throw new IllegalStateException("Dataset has no data to visualize");
+        }
+
+        int[] array = Arrays.copyOf(dataset.getData(), dataset.getData().length);
+        MetricsCollector metrics = new MetricsCollector();
+        StepCollector stepCollector = new StepCollector();
+        
+        // Use provided target or default to middle element
+        int searchTarget = (target != null) ? target : (array.length > 0 ? array[array.length / 2] : 0);
+        
+        LinearSearch linearSearch = new LinearSearch();
+        linearSearch.searchWithSteps(array, searchTarget, metrics, stepCollector);
         
         return stepCollector.getSteps();
     }

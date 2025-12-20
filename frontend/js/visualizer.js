@@ -175,7 +175,7 @@ export class Visualizer {
                 body: JSON.stringify({
                     datasetId,
                     algorithmName,
-                    searchTarget
+                    target: searchTarget ? searchTarget.toString() : undefined
                 })
             });
             
