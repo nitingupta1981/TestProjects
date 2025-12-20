@@ -373,6 +373,19 @@ select:focus {
     font-weight: bold;
 }
 
+/* Search result indicators */
+.found-yes {
+    color: #28a745;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+.found-no {
+    color: #dc3545;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
 /* Benchmark Results */
 .benchmark-stats {
     display: grid;
