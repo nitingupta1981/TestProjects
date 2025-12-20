@@ -93,15 +93,19 @@ function setupTabs() {
             tabBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             
-            // Show/hide content
+            // Show/hide content based on tab
             const allContent = document.querySelectorAll('[data-tab-content]');
             allContent.forEach(content => {
                 if (content.dataset.tabContent === targetTab) {
                     content.classList.add('active');
-                    content.style.display = 'block';
+                    // Don't hide sections that need conditional display
+                    if (!content.id || !['analysis-section', 'recommendation-section', 'results-section', 'benchmark-section'].includes(content.id)) {
+                        content.style.display = 'block';
+                    }
                 } else {
                     content.classList.remove('active');
-                    if (!content.id || !['analysis-section', 'recommendation-section', 'results-section', 'benchmark-section'].includes(content.id)) {
+                    // Only hide if not in main tab or is visualization section
+                    if (targetTab !== 'main' || content.dataset.tabContent === 'visualization') {
                         content.style.display = 'none';
                     }
                 }
@@ -109,8 +113,8 @@ function setupTabs() {
         });
     });
     
-    // Activate first tab
-    const firstTab = document.querySelector('.tab-btn[data-tab="datasets"]');
+    // Activate first tab (main)
+    const firstTab = document.querySelector('.tab-btn[data-tab="main"]');
     if (firstTab) {
         firstTab.click();
     }

@@ -15,14 +15,13 @@
 
         <!-- Tab Navigation -->
         <nav class="tab-navigation">
-            <button class="tab-btn active" data-tab="datasets">📊 Datasets</button>
-            <button class="tab-btn" data-tab="comparison">⚖️ Comparison</button>
+            <button class="tab-btn active" data-tab="main">📊 Datasets & Comparison</button>
             <button class="tab-btn" data-tab="visualization">🎬 Visualization</button>
         </nav>
 
         <main>
             <!-- Dataset Management Section -->
-            <section class="card tab-content" data-tab-content="datasets">
+            <section class="card tab-content active" data-tab-content="main">
                 <h2>Dataset Management</h2>
                 
                 <div class="form-group">
@@ -57,19 +56,19 @@
             </section>
 
             <!-- Dataset Analysis Section -->
-            <section id="analysis-section" class="card tab-content" data-tab-content="datasets" style="display: none;">
+            <section id="analysis-section" class="card tab-content active" data-tab-content="main" style="display: none;">
                 <h2>Dataset Analysis</h2>
                 <div id="dataset-characteristics"></div>
             </section>
 
             <!-- Recommendation Section -->
-            <section id="recommendation-section" class="card tab-content" data-tab-content="datasets" style="display: none;">
+            <section id="recommendation-section" class="card tab-content active" data-tab-content="main" style="display: none;">
                 <h2>Algorithm Recommendation</h2>
                 <div id="recommendation-details" class="recommendation-box"></div>
             </section>
 
             <!-- Algorithm Selection Section -->
-            <section class="card tab-content" data-tab-content="comparison">
+            <section class="card tab-content active" data-tab-content="main">
                 <h2>Algorithm Selection</h2>
                 
                 <div class="form-group">
@@ -111,7 +110,7 @@
             </section>
 
             <!-- Results Section -->
-            <section id="results-section" class="card tab-content" data-tab-content="comparison" style="display: none;">
+            <section id="results-section" class="card tab-content active" data-tab-content="main" style="display: none;">
                 <h2>Comparison Results</h2>
                 <div id="results-table-container"></div>
                 <button id="export-csv-btn" class="btn btn-secondary">Export as CSV</button>
@@ -120,7 +119,7 @@
             </section>
 
             <!-- Benchmark Results Section -->
-            <section id="benchmark-section" class="card tab-content" data-tab-content="comparison" style="display: none;">
+            <section id="benchmark-section" class="card tab-content active" data-tab-content="main" style="display: none;">
                 <h2>Benchmark Results</h2>
                 <div id="benchmark-results-container"></div>
                 <button id="export-benchmark-btn" class="btn btn-secondary">Export Benchmark</button>
