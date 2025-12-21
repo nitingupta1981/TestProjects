@@ -133,8 +133,17 @@ export class Visualizer {
                         const option = document.createElement('option');
                         option.value = dataset.id;
                         option.textContent = `${dataset.name} (${dataset.size} elements)`;
+                        option.dataset.dataType = dataset.dataType; // Store data type
                         select.appendChild(option);
                     });
+                    
+                    // Add change listener to update search input type
+                    select.addEventListener('change', () => {
+                        this.updateVisSearchInputType();
+                    });
+                    
+                    // Initial update
+                    this.updateVisSearchInputType();
                 }
             }
         } catch (error) {
@@ -142,12 +151,45 @@ export class Visualizer {
         }
     }
 
+    updateVisSearchInputType() {
+        const select = document.getElementById('vis-dataset-select');
+        const searchInput = document.getElementById('vis-search-target');
+        
+        if (!select || !searchInput) return;
+        
+        const selectedOption = select.options[select.selectedIndex];
+        if (!selectedOption) return;
+        
+        const dataType = selectedOption.dataset.dataType;
+        
+        if (dataType === 'STRING') {
+            searchInput.type = 'text';
+            searchInput.value = 'apple';
+            searchInput.placeholder = 'Enter string to search';
+        } else {
+            searchInput.type = 'number';
+            searchInput.value = '50';
+            searchInput.placeholder = 'Enter number to search';
+        }
+    }
+
     async loadVisualization() {
         const datasetId = document.getElementById('vis-dataset-select')?.value;
         const algorithmName = document.getElementById('vis-algorithm-select')?.value;
         const algorithmType = document.getElementById('vis-algorithm-type')?.value;
-        const searchTarget = algorithmType === 'SEARCH' ? 
-            parseInt(document.getElementById('vis-search-target')?.value || '50') : undefined;
+        
+        // Get search target and handle both string and number types
+        let searchTarget;
+        if (algorithmType === 'SEARCH') {
+            const searchInput = document.getElementById('vis-search-target');
+            const inputValue = searchInput?.value;
+            
+            if (searchInput?.type === 'number') {
+                searchTarget = parseInt(inputValue || '50');
+            } else {
+                searchTarget = inputValue || 'apple';
+            }
+        }
         
         if (!datasetId || !algorithmName) {
             alert('Please select a dataset and algorithm');
@@ -166,7 +208,7 @@ export class Visualizer {
                 body: JSON.stringify({
                     datasetId,
                     algorithmName,
-                    target: searchTarget ? searchTarget.toString() : undefined
+                    target: searchTarget !== undefined ? searchTarget.toString() : undefined
                 })
             });
             
@@ -304,14 +346,17 @@ export class Visualizer {
             
             // Color based on highlighting and operation
             let color = this.getHighlightColor(step, index);
+            const isHighlighted = step.highlightedIndices && step.highlightedIndices.includes(index);
             
-            // Draw box
-            ctx.fillStyle = color;
-            ctx.fillRect(x, y, boxWidth, boxHeight);
+            // Only draw filled box if highlighted, otherwise just draw border
+            if (isHighlighted) {
+                ctx.fillStyle = color;
+                ctx.fillRect(x, y, boxWidth, boxHeight);
+            }
             
-            // Draw border
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 2;
+            // Draw border (always) - subtle for inactive, bold for active
+            ctx.strokeStyle = isHighlighted ? '#333' : '#ddd';
+            ctx.lineWidth = isHighlighted ? 2 : 0.5;
             ctx.strokeRect(x, y, boxWidth, boxHeight);
             
             // Draw string value vertically (bottom to top)
@@ -361,7 +406,8 @@ export class Visualizer {
             } else if (step.operation === 'SET') {
                 color = '#a78bfa'; // Purple for set/insert
             } else {
-                color = '#ff6b6b'; // Default highlight (red)
+                //color = '#ff6b6b'; // Default highlight (red)
+                color = '#51cf66'; // Default highlight (green)
             }
         }
         

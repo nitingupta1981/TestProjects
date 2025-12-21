@@ -36,15 +36,24 @@ export class AlgorithmRunner {
     }
 
     async runSearchComparison(datasetIds, algorithmNames, target) {
+        // Determine if target is a number or string
+        const requestBody = {
+            datasetIds,
+            algorithmNames,
+            operationType: 'SEARCH'
+        };
+        
+        // Add the appropriate target field based on type
+        if (typeof target === 'number') {
+            requestBody.searchTarget = target;
+        } else {
+            requestBody.searchTargetString = target;
+        }
+        
         const response = await fetch(`${this.apiBaseUrl}/algorithms/search/compare`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                datasetIds,
-                algorithmNames,
-                operationType: 'SEARCH',
-                searchTarget: target
-            })
+            body: JSON.stringify(requestBody)
         });
         
         if (!response.ok) {

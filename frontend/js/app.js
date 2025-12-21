@@ -21,8 +21,8 @@ import { Benchmarking } from './benchmarking.js';
 import { Exporter } from './exporter.js';
 
 // API Base URL
-const API_BASE_URL = 'http://localhost:8080/api';
-// const API_BASE_URL = 'https://algocompare-backend-210924058354.europe-west1.run.app/api';
+// const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'https://algocompare-backend-210924058354.europe-west1.run.app/api';
 
 
 // Application State
@@ -276,6 +276,20 @@ function updateAlgorithmAvailability() {
             }
         });
     }
+    
+    // Update search target input type based on dataset type
+    const searchTargetInput = document.getElementById('search-target');
+    if (searchTargetInput) {
+        if (dataType === 'STRING') {
+            searchTargetInput.type = 'text';
+            searchTargetInput.value = 'apple'; // Default string search target
+            searchTargetInput.placeholder = 'Enter string to search';
+        } else {
+            searchTargetInput.type = 'number';
+            searchTargetInput.value = '0'; // Default number search target
+            searchTargetInput.placeholder = 'Enter number to search';
+        }
+    }
 }
 
 /**
@@ -433,7 +447,11 @@ async function handleRunComparison() {
     try {
         let results;
         if (state.operationType === 'SEARCH') {
-            const target = parseInt(document.getElementById('search-target').value);
+            const targetInput = document.getElementById('search-target').value;
+            // Convert to int only if it's a number type input
+            const target = document.getElementById('search-target').type === 'number' 
+                ? parseInt(targetInput) 
+                : targetInput;
             results = await algorithmRunner.runSearchComparison(
                 state.selectedDatasets,
                 selectedAlgorithms,

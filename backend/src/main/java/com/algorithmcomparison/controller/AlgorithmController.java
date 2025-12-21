@@ -92,7 +92,9 @@ public class AlgorithmController {
      * {
      *   "datasetIds": ["dataset-1"],
      *   "algorithmNames": ["Linear Search", "Binary Search"],
-     *   "searchTarget": 42
+     *   "searchTarget": 42  // for INTEGER datasets
+     *   OR
+     *   "searchTargetString": "apple"  // for STRING datasets
      * }
      * 
      * @param request Comparison request
@@ -102,23 +104,45 @@ public class AlgorithmController {
     public ResponseEntity<?> compareSearchingAlgorithms(
             @RequestBody ComparisonRequest request) {
         try {
-            int target = request.getSearchTarget() != null ? request.getSearchTarget() : 0;
-            
             if (request.getDatasetIds().size() == 1) {
                 // Single dataset comparison
-                List<AlgorithmResult> results = searchingService.compareAlgorithms(
-                    request.getDatasetIds().get(0), 
-                    request.getAlgorithmNames(),
-                    target
-                );
+                List<AlgorithmResult> results;
+                if (request.getSearchTargetString() != null) {
+                    // String search
+                    results = searchingService.compareAlgorithms(
+                        request.getDatasetIds().get(0), 
+                        request.getAlgorithmNames(),
+                        request.getSearchTargetString()
+                    );
+                } else {
+                    // Integer search
+                    int target = request.getSearchTarget() != null ? request.getSearchTarget() : 0;
+                    results = searchingService.compareAlgorithms(
+                        request.getDatasetIds().get(0), 
+                        request.getAlgorithmNames(),
+                        target
+                    );
+                }
                 return ResponseEntity.ok(results);
             } else {
                 // Multiple dataset comparison
-                List<AlgorithmResult> results = searchingService.compareOnMultipleDatasets(
-                    request.getDatasetIds(), 
-                    request.getAlgorithmNames(),
-                    target
-                );
+                List<AlgorithmResult> results;
+                if (request.getSearchTargetString() != null) {
+                    // String search
+                    results = searchingService.compareOnMultipleDatasets(
+                        request.getDatasetIds(), 
+                        request.getAlgorithmNames(),
+                        request.getSearchTargetString()
+                    );
+                } else {
+                    // Integer search
+                    int target = request.getSearchTarget() != null ? request.getSearchTarget() : 0;
+                    results = searchingService.compareOnMultipleDatasets(
+                        request.getDatasetIds(), 
+                        request.getAlgorithmNames(),
+                        target
+                    );
+                }
                 return ResponseEntity.ok(results);
             }
         } catch (Exception e) {

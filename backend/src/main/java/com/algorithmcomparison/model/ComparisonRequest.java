@@ -16,7 +16,8 @@ public class ComparisonRequest {
     private List<String> datasetIds;
     private List<String> algorithmNames;
     private String operationType; // "SORT" or "SEARCH"
-    private Integer searchTarget; // For search operations
+    private Integer searchTarget; // For search operations (INTEGER datasets)
+    private String searchTargetString; // For search operations (STRING datasets)
     private boolean includeVisualization;
 
     /**
@@ -72,6 +73,14 @@ public class ComparisonRequest {
         this.searchTarget = searchTarget;
     }
 
+    public String getSearchTargetString() {
+        return searchTargetString;
+    }
+
+    public void setSearchTargetString(String searchTargetString) {
+        this.searchTargetString = searchTargetString;
+    }
+
     public boolean isIncludeVisualization() {
         return includeVisualization;
     }
@@ -96,7 +105,7 @@ public class ComparisonRequest {
             (!operationType.equals("SORT") && !operationType.equals("SEARCH"))) {
             return false;
         }
-        if (operationType.equals("SEARCH") && searchTarget == null) {
+        if (operationType.equals("SEARCH") && searchTarget == null && searchTargetString == null) {
             return false;
         }
         return true;
@@ -109,6 +118,7 @@ public class ComparisonRequest {
                 ", algorithmNames=" + algorithmNames +
                 ", operationType='" + operationType + '\'' +
                 ", searchTarget=" + searchTarget +
+                ", searchTargetString='" + searchTargetString + '\'' +
                 ", includeVisualization=" + includeVisualization +
                 '}';
     }
