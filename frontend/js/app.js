@@ -251,14 +251,11 @@ function updateAlgorithmAvailability() {
             const supportedTypes = algorithmSupport.sorting[algoName] || [];
             
             if (supportedTypes.includes(dataType)) {
+                checkbox.parentElement.style.display = 'block';
                 checkbox.disabled = false;
-                checkbox.parentElement.style.opacity = '1';
-                checkbox.parentElement.style.cursor = 'pointer';
             } else {
-                checkbox.disabled = true;
+                checkbox.parentElement.style.display = 'none';
                 checkbox.checked = false;
-                checkbox.parentElement.style.opacity = '0.5';
-                checkbox.parentElement.style.cursor = 'not-allowed';
             }
         });
     }
@@ -271,14 +268,11 @@ function updateAlgorithmAvailability() {
             const supportedTypes = algorithmSupport.searching[algoName] || [];
             
             if (supportedTypes.includes(dataType)) {
+                checkbox.parentElement.style.display = 'block';
                 checkbox.disabled = false;
-                checkbox.parentElement.style.opacity = '1';
-                checkbox.parentElement.style.cursor = 'pointer';
             } else {
-                checkbox.disabled = true;
+                checkbox.parentElement.style.display = 'none';
                 checkbox.checked = false;
-                checkbox.parentElement.style.opacity = '0.5';
-                checkbox.parentElement.style.cursor = 'not-allowed';
             }
         });
     }
