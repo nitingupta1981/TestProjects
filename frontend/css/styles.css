@@ -265,14 +265,20 @@ select:focus {
     cursor: pointer;
     transition: all 0.3s;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dataset-info {
+    flex: 1;
 }
 
 .dataset-actions {
     display: flex;
     gap: 5px;
     flex-shrink: 0;
+    justify-content: flex-end;
+    margin-top: auto;
 }
 
 .dataset-item:hover {

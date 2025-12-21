@@ -137,12 +137,16 @@ async function handleGenerateDataset() {
     try {
         const dataset = await datasetManager.generateDataset(type, size, 1, 10000, dataType);
         state.datasets.push(dataset);
+        
+        // Clear previous selections and select only the newly generated dataset
+        state.selectedDatasets = [dataset.id];
+        
         renderDatasets();
         
         // Update visualization dropdown with new dataset
         visualizer.loadDatasetOptions();
         
-        showMessage('Dataset generated successfully!', 'success');
+        showMessage('Dataset generated and selected successfully!', 'success');
     } catch (error) {
         showMessage('Error generating dataset: ' + error.message, 'error');
     }
@@ -167,7 +171,7 @@ function renderDatasets() {
             '<br><small style="color: #ff9800;">⚠️ Analysis not available for STRING datasets</small>' : '';
         
         item.innerHTML = `
-            <div style="flex: 1;">
+            <div class="dataset-info">
                 <strong>${dataset.name}</strong><br>
                 Type: ${dataset.type} | Data: ${dataset.dataType || 'INTEGER'}<br>
                 Size: ${dataset.size}${analysisNote}<br>

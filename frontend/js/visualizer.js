@@ -93,12 +93,17 @@ export class Visualizer {
         const algorithms = type === 'SEARCH' ? this.searchingAlgorithms : this.sortingAlgorithms;
         
         // Populate dropdown with all algorithms
-        algorithms.forEach(algo => {
+        algorithms.forEach((algo, index) => {
             const option = document.createElement('option');
             option.value = algo;
             option.textContent = algo;
             algorithmSelect.appendChild(option);
         });
+        
+        // Explicitly set the first option as selected
+        if (algorithms.length > 0) {
+            algorithmSelect.selectedIndex = 0;
+        }
         
         if (searchTargetGroup) {
             searchTargetGroup.style.display = type === 'SEARCH' ? 'block' : 'none';
