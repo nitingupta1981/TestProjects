@@ -30,6 +30,7 @@ public class AlgorithmComparisonApplication {
 
     /**
      * Configure CORS to allow frontend to communicate with backend.
+     * Allows all origins for Cloud Run deployment (*.run.app).
      * 
      * @return WebMvcConfigurer with CORS settings
      */
@@ -39,9 +40,10 @@ public class AlgorithmComparisonApplication {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
-                        .allowedOrigins("*")
+                        .allowedOriginPatterns("*")  // Allow all origins including Cloud Run
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*");
+                        .allowedHeaders("*")
+                        .allowCredentials(false);
             }
         };
     }
