@@ -168,16 +168,7 @@ public class AlgorithmController {
         try {
             String datasetId = request.get("datasetId");
             String algorithmName = request.get("algorithmName");
-            String targetStr = request.get("target"); // For search algorithms
-            
-            Integer target = null;
-            if (targetStr != null && !targetStr.isEmpty()) {
-                try {
-                    target = Integer.parseInt(targetStr);
-                } catch (NumberFormatException e) {
-                    // Invalid target, will use default
-                }
-            }
+            String target = request.get("target"); // For search algorithms - keep as String
             
             List<VisualizationStep> steps = visualizationService.visualizeAlgorithm(
                 datasetId, algorithmName, target);

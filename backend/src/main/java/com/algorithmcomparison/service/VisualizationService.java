@@ -91,7 +91,7 @@ public class VisualizationService {
      * @throws IllegalArgumentException if dataset not found
      * @throws UnsupportedOperationException if dataset type is not INTEGER
      */
-    public List<VisualizationStep> visualizeAlgorithm(String datasetId, String algorithmName, Integer target) {
+    public List<VisualizationStep> visualizeAlgorithm(String datasetId, String algorithmName, String target) {
         // Check if algorithm has full visualization support
         if (algorithmName.equalsIgnoreCase("Bubble Sort")) {
             return visualizeBubbleSort(datasetId);
@@ -230,7 +230,7 @@ public class VisualizationService {
      * @param target Optional target value to search for (if null, uses middle element)
      * @return List of visualization steps
      */
-    private List<VisualizationStep> visualizeLinearSearch(String datasetId, Integer target) {
+    private List<VisualizationStep> visualizeLinearSearch(String datasetId, String target) {
         Dataset dataset = datasetService.getDataset(datasetId);
         if (dataset == null) {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
@@ -247,7 +247,7 @@ public class VisualizationService {
             }
             String[] array = Arrays.copyOf(dataset.getStringData(), dataset.getStringData().length);
             // Use provided target or default to middle element
-            String searchTarget = (target != null) ? String.valueOf(target) : 
+            String searchTarget = (target != null && !target.isEmpty()) ? target : 
                                  (array.length > 0 ? array[array.length / 2] : "");
             linearSearch.searchWithSteps(array, searchTarget, metrics, stepCollector);
         } else {
@@ -255,8 +255,18 @@ public class VisualizationService {
                 throw new IllegalStateException("Dataset has no data to visualize");
             }
             int[] array = Arrays.copyOf(dataset.getData(), dataset.getData().length);
-            // Use provided target or default to middle element
-            int searchTarget = (target != null) ? target : (array.length > 0 ? array[array.length / 2] : 0);
+            // Parse target as integer or use default to middle element
+            int searchTarget;
+            if (target != null && !target.isEmpty()) {
+                try {
+                    searchTarget = Integer.parseInt(target);
+                } catch (NumberFormatException e) {
+                    // If parsing fails, use middle element
+                    searchTarget = array.length > 0 ? array[array.length / 2] : 0;
+                }
+            } else {
+                searchTarget = array.length > 0 ? array[array.length / 2] : 0;
+            }
             linearSearch.searchWithSteps(array, searchTarget, metrics, stepCollector);
         }
         
@@ -270,7 +280,7 @@ public class VisualizationService {
      * @param target Optional target value to search for (if null, uses middle element of sorted array)
      * @return List of visualization steps
      */
-    private List<VisualizationStep> visualizeBinarySearch(String datasetId, Integer target) {
+    private List<VisualizationStep> visualizeBinarySearch(String datasetId, String target) {
         Dataset dataset = datasetService.getDataset(datasetId);
         if (dataset == null) {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
@@ -289,7 +299,7 @@ public class VisualizationService {
             // Sort the array for binary search
             Arrays.sort(array);
             // Use provided target or default to middle element of sorted array
-            String searchTarget = (target != null) ? String.valueOf(target) : 
+            String searchTarget = (target != null && !target.isEmpty()) ? target : 
                                  (array.length > 0 ? array[array.length / 2] : "");
             binarySearch.searchWithSteps(array, searchTarget, metrics, stepCollector);
         } else {
@@ -299,8 +309,18 @@ public class VisualizationService {
             int[] array = Arrays.copyOf(dataset.getData(), dataset.getData().length);
             // Sort the array for binary search
             Arrays.sort(array);
-            // Use provided target or default to middle element of sorted array
-            int searchTarget = (target != null) ? target : (array.length > 0 ? array[array.length / 2] : 0);
+            // Parse target as integer or use default to middle element of sorted array
+            int searchTarget;
+            if (target != null && !target.isEmpty()) {
+                try {
+                    searchTarget = Integer.parseInt(target);
+                } catch (NumberFormatException e) {
+                    // If parsing fails, use middle element
+                    searchTarget = array.length > 0 ? array[array.length / 2] : 0;
+                }
+            } else {
+                searchTarget = array.length > 0 ? array[array.length / 2] : 0;
+            }
             binarySearch.searchWithSteps(array, searchTarget, metrics, stepCollector);
         }
         
