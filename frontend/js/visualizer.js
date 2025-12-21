@@ -222,6 +222,30 @@ export class Visualizer {
         const array = step.arrayState || [];
         if (array.length === 0) return;
         
+        // Detect if we're visualizing strings or numbers
+        const isStringArray = array.length > 0 && typeof array[0] === 'string';
+        
+        if (isStringArray) {
+            this.drawStringVisualization(step, array);
+        } else {
+            this.drawNumberVisualization(step, array);
+        }
+        
+        // Update description
+        const desc = document.getElementById('visualization-description');
+        if (desc && step.description) {
+            desc.innerHTML = `
+                <strong>Step ${step.stepNumber}:</strong> ${step.description}<br>
+                <em>Operation: ${step.operation || 'N/A'}</em>
+            `;
+        }
+        
+        this.updateStepCounter();
+    }
+
+    drawNumberVisualization(step, array) {
+        const ctx = this.ctx;
+        const canvas = this.canvas;
         const barWidth = Math.min(canvas.width / array.length, 80);
         const maxValue = Math.max(...array.map(v => typeof v === 'number' ? v : 0));
         const padding = 20;
@@ -234,30 +258,7 @@ export class Visualizer {
             const y = canvas.height - barHeight - 30;
             
             // Color based on highlighting and operation
-            let color = '#4ecdc4'; // Default color
-            
-            if (step.highlightedIndices && step.highlightedIndices.includes(index)) {
-                // Check for color hints in the step data
-                const highlightColor = step.highlightedIndices.findIndex(i => i === index);
-                const colors = step.colors || [];
-                
-                if (step.operation === 'SWAP') {
-                    color = '#ffd700'; // Gold for swap
-                } else if (step.operation === 'COMPARE') {
-                    color = '#ff6b6b'; // Red for compare
-                } else if (step.operation === 'FOUND') {
-                    color = '#51cf66'; // Green for found
-                } else if (step.operation === 'RANGE') {
-                    // For binary search: yellow for boundaries, blue for mid
-                    // The mid is the last highlighted index
-                    const isLastHighlighted = index === step.highlightedIndices[step.highlightedIndices.length - 1];
-                    color = isLastHighlighted ? '#4dabf7' : '#ffd700'; // Blue for mid, yellow for boundaries
-                } else if (step.operation === 'CHECK') {
-                    color = '#4dabf7'; // Blue for checking
-                } else {
-                    color = '#ff6b6b'; // Default highlight
-                }
-            }
+            let color = this.getHighlightColor(step, index);
             
             // Draw bar
             ctx.fillStyle = color;
@@ -275,20 +276,96 @@ export class Visualizer {
                 ctx.textAlign = 'center';
                 ctx.fillText(value, x + (barWidth - 4) / 2, canvas.height - barHeight - 35);
             }
-            
-            // Don't draw index numbers on x-axis (removed to reduce clutter)
         });
+    }
+
+    drawStringVisualization(step, array) {
+        const ctx = this.ctx;
+        const canvas = this.canvas;
         
-        // Update description
-        const desc = document.getElementById('visualization-description');
-        if (desc && step.description) {
-            desc.innerHTML = `
-                <strong>Step ${step.stepNumber}:</strong> ${step.description}<br>
-                <em>Operation: ${step.operation || 'N/A'}</em>
-            `;
+        // Fixed box width for consistent appearance
+        const boxWidth = 50;
+        const padding = 10;
+        
+        // Calculate box height based on longest string (with character height)
+        const charHeight = 16; // Height per character
+        const maxStringLength = Math.max(...array.map(s => s.toString().length));
+        const boxHeight = Math.max(maxStringLength * charHeight + 20, 80); // Minimum 80px
+        
+        // Position boxes to fill canvas width
+        const totalWidth = array.length * (boxWidth + padding);
+        const startX = (canvas.width - totalWidth) / 2 + padding;
+        const startY = (canvas.height - boxHeight) / 2; // Center vertically
+        
+        // Draw string boxes
+        array.forEach((value, index) => {
+            const x = startX + index * (boxWidth + padding);
+            const y = startY;
+            
+            // Color based on highlighting and operation
+            let color = this.getHighlightColor(step, index);
+            
+            // Draw box
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, boxWidth, boxHeight);
+            
+            // Draw border
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x, y, boxWidth, boxHeight);
+            
+            // Draw string value vertically (bottom to top)
+            ctx.save(); // Save current context state
+            
+            // Move to bottom center of the box
+            ctx.translate(x + boxWidth / 2, y + boxHeight - 10);
+            
+            // Rotate 90 degrees counter-clockwise
+            ctx.rotate(-Math.PI / 2);
+            
+            // Draw text
+            ctx.fillStyle = '#000';
+            ctx.font = '18px Arial';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            
+            const displayValue = value.toString();
+            ctx.fillText(displayValue, 0, 0);
+            
+            ctx.restore(); // Restore context state
+            
+            // Draw index below box
+            ctx.fillStyle = '#666';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(index, x + boxWidth / 2, y + boxHeight + 15);
+        });
+    }
+
+    getHighlightColor(step, index) {
+        let color = '#4ecdc4'; // Default color (teal)
+        
+        if (step.highlightedIndices && step.highlightedIndices.includes(index)) {
+            if (step.operation === 'SWAP') {
+                color = '#ffd700'; // Gold for swap
+            } else if (step.operation === 'COMPARE') {
+                color = '#ff6b6b'; // Red for compare
+            } else if (step.operation === 'FOUND') {
+                color = '#51cf66'; // Green for found
+            } else if (step.operation === 'RANGE') {
+                // For binary search: yellow for boundaries, blue for mid
+                const isLastHighlighted = index === step.highlightedIndices[step.highlightedIndices.length - 1];
+                color = isLastHighlighted ? '#4dabf7' : '#ffd700';
+            } else if (step.operation === 'CHECK') {
+                color = '#4dabf7'; // Blue for checking
+            } else if (step.operation === 'SET') {
+                color = '#a78bfa'; // Purple for set/insert
+            } else {
+                color = '#ff6b6b'; // Default highlight (red)
+            }
         }
         
-        this.updateStepCounter();
+        return color;
     }
 
     updateStepCounter() {
