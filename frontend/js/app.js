@@ -29,8 +29,7 @@ const state = {
     selectedDatasets: [],
     currentResults: [],
     currentBenchmark: null,
-    operationType: 'SORT',
-    comparedAlgorithms: [] // Track algorithms used in last comparison
+    operationType: 'SORT'
 };
 
 // Initialize modules
@@ -115,8 +114,7 @@ function setupTabs() {
             // Refresh dataset options when switching to visualization tab
             if (targetTab === 'visualization') {
                 visualizer.loadDatasetOptions();
-                // Update algorithm options with compared algorithms
-                visualizer.populateAlgorithmOptions(state.comparedAlgorithms);
+                visualizer.populateAlgorithmOptions();
             }
         });
     });
@@ -382,9 +380,6 @@ async function handleRunComparison() {
         }
         
         state.currentResults = results;
-        
-        // Store compared algorithms for visualization filtering
-        state.comparedAlgorithms = selectedAlgorithms;
         
         displayResults(results);
         showMessage('Comparison complete!', 'success');

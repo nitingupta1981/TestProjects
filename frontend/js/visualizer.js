@@ -79,7 +79,7 @@ export class Visualizer {
         }
     }
 
-    populateAlgorithmOptions(comparedAlgorithms = null) {
+    populateAlgorithmOptions() {
         const typeSelect = document.getElementById('vis-algorithm-type');
         const algorithmSelect = document.getElementById('vis-algorithm-select');
         const searchTargetGroup = document.getElementById('vis-search-target-group');
@@ -89,30 +89,16 @@ export class Visualizer {
         const type = typeSelect.value;
         algorithmSelect.innerHTML = '';
         
-        // Get algorithm list based on type
-        let algorithms = type === 'SEARCH' ? this.searchingAlgorithms : this.sortingAlgorithms;
+        // Get all algorithms based on type (no filtering)
+        const algorithms = type === 'SEARCH' ? this.searchingAlgorithms : this.sortingAlgorithms;
         
-        // Filter by compared algorithms if available (from app state)
-        if (comparedAlgorithms && comparedAlgorithms.length > 0) {
-            algorithms = algorithms.filter(algo => comparedAlgorithms.includes(algo));
-        }
-        
-        // Populate dropdown
-        if (algorithms.length === 0) {
+        // Populate dropdown with all algorithms
+        algorithms.forEach(algo => {
             const option = document.createElement('option');
-            option.value = '';
-            option.textContent = 'Run a comparison first to enable visualization';
-            option.disabled = true;
-            option.selected = true;
+            option.value = algo;
+            option.textContent = algo;
             algorithmSelect.appendChild(option);
-        } else {
-            algorithms.forEach(algo => {
-                const option = document.createElement('option');
-                option.value = algo;
-                option.textContent = algo;
-                algorithmSelect.appendChild(option);
-            });
-        }
+        });
         
         if (searchTargetGroup) {
             searchTargetGroup.style.display = type === 'SEARCH' ? 'block' : 'none';
@@ -326,6 +312,12 @@ export class Visualizer {
 
     play() {
         if (this.isPlaying) return; // Prevent multiple simultaneous plays
+        
+        // If we're at the end, restart from the beginning
+        if (this.currentStep >= this.steps.length - 1) {
+            this.currentStep = 0;
+        }
+        
         this.isPlaying = true;
         this.updateButtonStates();
         this.animate();
