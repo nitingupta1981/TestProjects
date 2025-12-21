@@ -178,9 +178,16 @@ export class Visualizer {
             this.currentStep = 0;
             
             // Check if this is a limited visualization (only 2 steps = start and end)
-            if (this.steps.length <= 2 && algorithmName !== 'Bubble Sort') {
+            const supportedAlgorithms = [
+                'Bubble Sort', 'Insertion Sort', 'Selection Sort', 
+                'Linear Search', 'Binary Search'
+            ];
+            
+            if (this.steps.length <= 2 && !supportedAlgorithms.includes(algorithmName)) {
                 const continueVis = confirm(
-                    `Note: Full step-by-step visualization is currently only available for Bubble Sort.\n\n` +
+                    `Note: Full step-by-step visualization is currently available for:\n` +
+                    `  • Sorting: Bubble Sort, Insertion Sort, Selection Sort\n` +
+                    `  • Searching: Linear Search, Binary Search\n\n` +
                     `${algorithmName} will show only the initial and final states.\n\n` +
                     `Continue with limited visualization?`
                 );
