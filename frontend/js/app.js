@@ -325,10 +325,13 @@ async function handleAnalyzeDataset() {
     try {
         const datasetId = state.selectedDatasets[0];
         
+        // Get dataset information to check type
+        const dataset = state.datasets.find(d => d.id === datasetId);
+        
         const analysis = await datasetAnalyzer.analyzeDataset(datasetId, state.operationType);
         
-        // Display characteristics
-        displayCharacteristics(analysis.characteristics);
+        // Display characteristics with dataset type information
+        displayCharacteristics(analysis.characteristics, dataset?.dataType);
         
         // Display recommendation
         displayRecommendation(analysis.recommendation);
@@ -344,9 +347,26 @@ async function handleAnalyzeDataset() {
 /**
  * Displays dataset characteristics.
  */
-function displayCharacteristics(characteristics) {
+function displayCharacteristics(characteristics, dataType) {
     const section = document.getElementById('analysis-section');
     const container = document.getElementById('dataset-characteristics');
+    
+    // Build range fields only for INTEGER datasets
+    const rangeFields = (dataType === 'INTEGER') ? `
+        <div class="char-item">
+            <strong>Range:</strong> [${characteristics.minValue}, ${characteristics.maxValue}]
+        </div>
+        <div class="char-item">
+            <strong>Range Size:</strong> ${characteristics.rangeSize}
+        </div>
+    ` : '';
+    
+    // Build distribution field only for INTEGER datasets
+    const distributionField = (dataType === 'INTEGER') ? `
+        <div class="char-item">
+            <strong>Distribution:</strong> ${characteristics.distribution}
+        </div>
+    ` : '';
     
     container.innerHTML = `
         <div class="char-grid">
@@ -368,15 +388,8 @@ function displayCharacteristics(characteristics) {
             <div class="char-item">
                 <strong>Unique Count:</strong> ${characteristics.uniqueCount}
             </div>
-            <div class="char-item">
-                <strong>Range:</strong> [${characteristics.minValue}, ${characteristics.maxValue}]
-            </div>
-            <div class="char-item">
-                <strong>Range Size:</strong> ${characteristics.rangeSize}
-            </div>
-            <div class="char-item">
-                <strong>Distribution:</strong> ${characteristics.distribution}
-            </div>
+            ${rangeFields}
+            ${distributionField}
             <div class="char-item">
                 <strong>Size Category:</strong> ${characteristics.sizeCategory}
             </div>
