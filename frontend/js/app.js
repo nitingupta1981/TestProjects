@@ -21,8 +21,8 @@ import { Benchmarking } from './benchmarking.js';
 import { Exporter } from './exporter.js';
 
 // API Base URL
-// const API_BASE_URL = 'http://localhost:8080/api';
-const API_BASE_URL = 'https://algocompare-backend-210924058354.europe-west1.run.app/api';
+const API_BASE_URL = 'http://localhost:8080/api';
+// const API_BASE_URL = 'https://algocompare-backend-210924058354.europe-west1.run.app/api';
 
 
 // Application State
@@ -144,6 +144,7 @@ async function handleGenerateDataset() {
         state.selectedDatasets = [dataset.id];
         
         renderDatasets();
+        updateAlgorithmAvailability(); // UPDATE ALGORITHMS BASED ON NEW DATASET
         
         // Update visualization dropdown with new dataset
         visualizer.loadDatasetOptions();
@@ -205,6 +206,82 @@ function toggleDatasetSelection(datasetId) {
         state.selectedDatasets.push(datasetId);
     }
     renderDatasets();
+    updateAlgorithmAvailability(); // UPDATE ALGORITHMS WHEN SELECTION CHANGES
+}
+
+/**
+ * Updates algorithm checkboxes based on selected dataset types.
+ * Disables algorithms that don't support the selected dataset type.
+ */
+function updateAlgorithmAvailability() {
+    let dataType = 'INTEGER';
+    
+    if (state.selectedDatasets.length > 0) {
+        const firstSelectedDataset = state.datasets.find(d => d.id === state.selectedDatasets[0]);
+        if (firstSelectedDataset) {
+            dataType = firstSelectedDataset.dataType || 'INTEGER';
+        }
+    }
+    
+    const algorithmSupport = {
+        sorting: {
+            'Bubble Sort': ['INTEGER', 'STRING'],
+            'Selection Sort': ['INTEGER', 'STRING'],
+            'Insertion Sort': ['INTEGER', 'STRING'],
+            'Quick Sort': ['INTEGER', 'STRING'],
+            'Merge Sort': ['INTEGER', 'STRING'],
+            'Heap Sort': ['INTEGER'],
+            'Shell Sort': ['INTEGER'],
+            'Counting Sort': ['INTEGER']
+        },
+        searching: {
+            'Linear Search': ['INTEGER', 'STRING'],
+            'Binary Search': ['INTEGER', 'STRING'],
+            'Trie Search': ['STRING'],
+            'Depth First Search': ['INTEGER'],
+            'Breadth First Search': ['INTEGER']
+        }
+    };
+    
+    const sortingContainer = document.getElementById('sorting-algorithms');
+    if (sortingContainer) {
+        const sortingCheckboxes = sortingContainer.querySelectorAll('input[type="checkbox"]');
+        sortingCheckboxes.forEach(checkbox => {
+            const algoName = checkbox.value;
+            const supportedTypes = algorithmSupport.sorting[algoName] || [];
+            
+            if (supportedTypes.includes(dataType)) {
+                checkbox.disabled = false;
+                checkbox.parentElement.style.opacity = '1';
+                checkbox.parentElement.style.cursor = 'pointer';
+            } else {
+                checkbox.disabled = true;
+                checkbox.checked = false;
+                checkbox.parentElement.style.opacity = '0.5';
+                checkbox.parentElement.style.cursor = 'not-allowed';
+            }
+        });
+    }
+    
+    const searchingContainer = document.getElementById('searching-algorithms');
+    if (searchingContainer) {
+        const searchingCheckboxes = searchingContainer.querySelectorAll('input[type="checkbox"]');
+        searchingCheckboxes.forEach(checkbox => {
+            const algoName = checkbox.value;
+            const supportedTypes = algorithmSupport.searching[algoName] || [];
+            
+            if (supportedTypes.includes(dataType)) {
+                checkbox.disabled = false;
+                checkbox.parentElement.style.opacity = '1';
+                checkbox.parentElement.style.cursor = 'pointer';
+            } else {
+                checkbox.disabled = true;
+                checkbox.checked = false;
+                checkbox.parentElement.style.opacity = '0.5';
+                checkbox.parentElement.style.cursor = 'not-allowed';
+            }
+        });
+    }
 }
 
 /**
