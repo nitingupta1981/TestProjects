@@ -111,6 +111,7 @@ public class SearchingService {
                 .targetIndex(resultIndex != -1 ? resultIndex : null)
                 .nodesVisited(metrics.getArrayAccessCount()) // For graph searches
                 .complexity(algorithm.getTimeComplexity())
+                .resultType("SEARCH")
                 .build();
     }
 

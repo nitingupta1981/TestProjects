@@ -24,6 +24,7 @@ public class AlgorithmResult {
     private boolean foundTarget; // For searching algorithms
     private Integer targetIndex; // For searching algorithms
     private String complexity; // Big-O notation
+    private String resultType; // "SORT" or "SEARCH"
     private long timestamp;
 
     /**
@@ -97,6 +98,11 @@ public class AlgorithmResult {
 
         public Builder complexity(String complexity) {
             result.complexity = complexity;
+            return this;
+        }
+
+        public Builder resultType(String resultType) {
+            result.resultType = resultType;
             return this;
         }
 
@@ -212,6 +218,14 @@ public class AlgorithmResult {
         this.complexity = complexity;
     }
 
+    public String getResultType() {
+        return resultType;
+    }
+
+    public void setResultType(String resultType) {
+        this.resultType = resultType;
+    }
+
     public long getTimestamp() {
         return timestamp;
     }
@@ -224,11 +238,20 @@ public class AlgorithmResult {
     public String toString() {
         return "AlgorithmResult{" +
                 "algorithmName='" + algorithmName + '\'' +
+                ", datasetId='" + datasetId + '\'' +
+                ", datasetName='" + datasetName + '\'' +
                 ", datasetSize=" + datasetSize +
-                ", executionTime=" + String.format("%.3f", executionTimeMillis) + "ms" +
-                ", comparisons=" + comparisonCount +
-                ", swaps=" + swapCount +
+                ", executionTimeNanos=" + executionTimeNanos +
+                ", executionTimeMillis=" + String.format("%.3f", executionTimeMillis) + "ms" +
+                ", comparisonCount=" + comparisonCount +
+                ", swapCount=" + swapCount +
+                ", arrayAccessCount=" + arrayAccessCount +
+                ", nodesVisited=" + nodesVisited +
+                ", foundTarget=" + foundTarget +
+                ", targetIndex=" + targetIndex +
                 ", complexity='" + complexity + '\'' +
+                ", resultType='" + resultType + '\'' +
+                ", timestamp=" + timestamp +
                 '}';
     }
 }

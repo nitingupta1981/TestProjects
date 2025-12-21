@@ -8,8 +8,8 @@ export class Comparator {
         const table = document.createElement('table');
         table.className = 'results-table';
         
-        // Determine if these are search results (check if foundTarget property exists)
-        const isSearchResults = results.length > 0 && results[0].hasOwnProperty('foundTarget');
+        // Determine if these are search results using the explicit resultType field
+        const isSearchResults = results.length > 0 && results[0].resultType === 'SEARCH';
         
         // Create header based on operation type
         const thead = document.createElement('thead');

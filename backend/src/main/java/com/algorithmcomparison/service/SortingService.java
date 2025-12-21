@@ -89,6 +89,7 @@ public class SortingService {
                 .swapCount(metrics.getSwapCount())
                 .arrayAccessCount(metrics.getArrayAccessCount())
                 .complexity(algorithm.getTimeComplexity())
+                .resultType("SORT")
                 .build();
     }
 
