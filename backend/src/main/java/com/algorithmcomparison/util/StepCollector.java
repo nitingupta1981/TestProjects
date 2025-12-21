@@ -84,6 +84,22 @@ public class StepCollector {
     }
     
     /**
+     * Records a range for binary search (left, right, and mid pointers).
+     */
+    public void recordRange(int[] array, int left, int right, int mid, String description) {
+        VisualizationStep step = new VisualizationStep(
+            stepNumber++, 
+            Arrays.copyOf(array, array.length), 
+            "RANGE"
+        );
+        step.setDescription(description);
+        step.addHighlightedIndex(left, "YELLOW");   // Left boundary
+        step.addHighlightedIndex(right, "YELLOW");  // Right boundary
+        step.addHighlightedIndex(mid, "BLUE");      // Mid point (checking)
+        steps.add(step);
+    }
+    
+    /**
      * Records finding the target (for search algorithms).
      */
     public void recordFound(int[] array, int index, String description) {

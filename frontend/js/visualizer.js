@@ -239,12 +239,23 @@ export class Visualizer {
             let color = '#4ecdc4'; // Default color
             
             if (step.highlightedIndices && step.highlightedIndices.includes(index)) {
+                // Check for color hints in the step data
+                const highlightColor = step.highlightedIndices.findIndex(i => i === index);
+                const colors = step.colors || [];
+                
                 if (step.operation === 'SWAP') {
                     color = '#ffd700'; // Gold for swap
                 } else if (step.operation === 'COMPARE') {
                     color = '#ff6b6b'; // Red for compare
                 } else if (step.operation === 'FOUND') {
                     color = '#51cf66'; // Green for found
+                } else if (step.operation === 'RANGE') {
+                    // For binary search: yellow for boundaries, blue for mid
+                    // The mid is the last highlighted index
+                    const isLastHighlighted = index === step.highlightedIndices[step.highlightedIndices.length - 1];
+                    color = isLastHighlighted ? '#4dabf7' : '#ffd700'; // Blue for mid, yellow for boundaries
+                } else if (step.operation === 'CHECK') {
+                    color = '#4dabf7'; // Blue for checking
                 } else {
                     color = '#ff6b6b'; // Default highlight
                 }

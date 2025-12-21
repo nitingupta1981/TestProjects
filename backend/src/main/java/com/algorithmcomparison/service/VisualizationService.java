@@ -6,6 +6,7 @@ import com.algorithmcomparison.algorithm.sorting.BubbleSort;
 import com.algorithmcomparison.algorithm.sorting.InsertionSort;
 import com.algorithmcomparison.algorithm.sorting.SelectionSort;
 import com.algorithmcomparison.algorithm.searching.LinearSearch;
+import com.algorithmcomparison.algorithm.searching.BinarySearch;
 import com.algorithmcomparison.util.MetricsCollector;
 import com.algorithmcomparison.util.StepCollector;
 import org.springframework.stereotype.Service;
@@ -100,6 +101,8 @@ public class VisualizationService {
             return visualizeSelectionSort(datasetId);
         } else if (algorithmName.equalsIgnoreCase("Linear Search")) {
             return visualizeLinearSearch(datasetId, target);
+        } else if (algorithmName.equalsIgnoreCase("Binary Search")) {
+            return visualizeBinarySearch(datasetId, target);
         }
 
         // Return basic visualization for other algorithms
@@ -237,6 +240,47 @@ public class VisualizationService {
         
         LinearSearch linearSearch = new LinearSearch();
         linearSearch.searchWithSteps(array, searchTarget, metrics, stepCollector);
+        
+        return stepCollector.getSteps();
+    }
+
+    /**
+     * Generates visualization steps for Binary Search algorithm.
+     * 
+     * @param datasetId The dataset ID
+     * @param target Optional target value to search for (if null, uses middle element of sorted array)
+     * @return List of visualization steps
+     */
+    private List<VisualizationStep> visualizeBinarySearch(String datasetId, Integer target) {
+        Dataset dataset = datasetService.getDataset(datasetId);
+        if (dataset == null) {
+            throw new IllegalArgumentException("Dataset not found: " + datasetId);
+        }
+
+        if ("STRING".equals(dataset.getDataType())) {
+            throw new UnsupportedOperationException(
+                "Visualization is currently only supported for INTEGER datasets. " +
+                "Dataset '" + dataset.getName() + "' is of type STRING."
+            );
+        }
+
+        if (dataset.getData() == null) {
+            throw new IllegalStateException("Dataset has no data to visualize");
+        }
+
+        int[] array = Arrays.copyOf(dataset.getData(), dataset.getData().length);
+        
+        // Sort the array for binary search
+        Arrays.sort(array);
+        
+        MetricsCollector metrics = new MetricsCollector();
+        StepCollector stepCollector = new StepCollector();
+        
+        // Use provided target or default to middle element of sorted array
+        int searchTarget = (target != null) ? target : (array.length > 0 ? array[array.length / 2] : 0);
+        
+        BinarySearch binarySearch = new BinarySearch();
+        binarySearch.searchWithSteps(array, searchTarget, metrics, stepCollector);
         
         return stepCollector.getSteps();
     }
