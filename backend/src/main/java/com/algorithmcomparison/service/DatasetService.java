@@ -159,22 +159,24 @@ public class DatasetService {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
         }
 
-        // Check dataset type
+        // Handle both INTEGER and STRING datasets
         if ("STRING".equals(dataset.getDataType())) {
-            throw new UnsupportedOperationException(
-                "Dataset analysis is currently only supported for INTEGER datasets. " +
-                "Dataset '" + dataset.getName() + "' is of type STRING."
-            );
+            // Verify string data is not null
+            if (dataset.getStringData() == null) {
+                throw new IllegalStateException(
+                    "Dataset '" + dataset.getName() + "' has no string data to analyze."
+                );
+            }
+            return DatasetAnalyzer.analyze(dataset.getStringData());
+        } else {
+            // Verify integer data is not null
+            if (dataset.getData() == null) {
+                throw new IllegalStateException(
+                    "Dataset '" + dataset.getName() + "' has no data to analyze."
+                );
+            }
+            return DatasetAnalyzer.analyze(dataset.getData());
         }
-
-        // Verify data is not null
-        if (dataset.getData() == null) {
-            throw new IllegalStateException(
-                "Dataset '" + dataset.getName() + "' has no data to analyze."
-            );
-        }
-
-        return DatasetAnalyzer.analyze(dataset.getData());
     }
 
     /**

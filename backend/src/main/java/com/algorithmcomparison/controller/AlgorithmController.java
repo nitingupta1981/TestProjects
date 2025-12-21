@@ -62,7 +62,7 @@ public class AlgorithmController {
      * @return List of algorithm results
      */
     @PostMapping("/sort/compare")
-    public ResponseEntity<List<AlgorithmResult>> compareSortingAlgorithms(
+    public ResponseEntity<?> compareSortingAlgorithms(
             @RequestBody ComparisonRequest request) {
         try {
             if (request.getDatasetIds().size() == 1) {
@@ -81,7 +81,7 @@ public class AlgorithmController {
                 return ResponseEntity.ok(results);
             }
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -99,7 +99,7 @@ public class AlgorithmController {
      * @return List of algorithm results
      */
     @PostMapping("/search/compare")
-    public ResponseEntity<List<AlgorithmResult>> compareSearchingAlgorithms(
+    public ResponseEntity<?> compareSearchingAlgorithms(
             @RequestBody ComparisonRequest request) {
         try {
             int target = request.getSearchTarget() != null ? request.getSearchTarget() : 0;
@@ -122,7 +122,7 @@ public class AlgorithmController {
                 return ResponseEntity.ok(results);
             }
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 

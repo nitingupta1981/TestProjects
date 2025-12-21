@@ -21,8 +21,8 @@ import { Benchmarking } from './benchmarking.js';
 import { Exporter } from './exporter.js';
 
 // API Base URL
-// const API_BASE_URL = 'http://localhost:8080/api';
-const API_BASE_URL = 'https://algocompare-backend-210924058354.europe-west1.run.app/api';
+const API_BASE_URL = 'http://localhost:8080/api';
+// const API_BASE_URL = 'https://algocompare-backend-210924058354.europe-west1.run.app/api';
 
 
 // Application State
@@ -169,14 +169,12 @@ function renderDatasets() {
         }
         
         const isString = dataset.dataType === 'STRING';
-        const analysisNote = isString ? 
-            '<br><small style="color: #ff9800;">⚠️ Analysis not available for STRING datasets</small>' : '';
         
         item.innerHTML = `
             <div class="dataset-info">
                 <strong>${dataset.name}</strong><br>
                 Type: ${dataset.type} | Data: ${dataset.dataType || 'INTEGER'}<br>
-                Size: ${dataset.size}${analysisNote}<br>
+                Size: ${dataset.size}<br>
                 <small>ID: ${dataset.id.substring(0, 8)}...</small>
             </div>
             <div class="dataset-actions">
@@ -241,14 +239,6 @@ async function handleAnalyzeDataset() {
     
     try {
         const datasetId = state.selectedDatasets[0];
-        
-        // Check if selected dataset is STRING type
-        const dataset = state.datasets.find(d => d.id === datasetId);
-        if (dataset && dataset.dataType === 'STRING') {
-            showMessage('Analysis is currently only supported for INTEGER datasets. ' +
-                       'Please select an integer dataset or generate a new one.', 'error');
-            return;
-        }
         
         const analysis = await datasetAnalyzer.analyzeDataset(datasetId, state.operationType);
         

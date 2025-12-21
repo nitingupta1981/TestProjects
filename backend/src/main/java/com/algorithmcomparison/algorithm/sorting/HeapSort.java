@@ -39,6 +39,14 @@ public class HeapSort implements SortingAlgorithm {
         }
     }
 
+    @Override
+    public void sort(String[] array, MetricsCollector metrics) {
+        // Heap Sort for strings is not currently implemented
+        throw new UnsupportedOperationException(
+            "Heap Sort is not yet implemented for String datasets. " +
+            "Please use Bubble Sort, Selection Sort, Insertion Sort, Merge Sort, or Quick Sort for string data.");
+    }
+
     /**
      * Heapifies a subtree rooted at node i.
      * 

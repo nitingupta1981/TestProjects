@@ -101,6 +101,14 @@ public class CountingSort implements SortingAlgorithm {
     }
 
     @Override
+    public void sort(String[] array, MetricsCollector metrics) {
+        // Counting Sort is not applicable to strings as it requires numeric range
+        throw new UnsupportedOperationException(
+            "Counting Sort is not supported for String datasets. " +
+            "This algorithm works only with integer data that has a limited range.");
+    }
+
+    @Override
     public String getName() {
         return "Counting Sort";
     }

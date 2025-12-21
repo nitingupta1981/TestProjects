@@ -34,6 +34,11 @@ public class LinearSearch implements SearchingAlgorithm {
         return searchInternal(array, target, metrics, null);
     }
 
+    @Override
+    public int search(String[] array, String target, MetricsCollector metrics) {
+        return searchStringInternal(array, target, metrics, null);
+    }
+
     /**
      * Searches the array with optional step collection for visualization.
      * 
@@ -45,6 +50,13 @@ public class LinearSearch implements SearchingAlgorithm {
      */
     public int searchWithSteps(int[] array, int target, MetricsCollector metrics, StepCollector stepCollector) {
         return searchInternal(array, target, metrics, stepCollector);
+    }
+
+    /**
+     * Searches the string array with optional step collection for visualization.
+     */
+    public int searchWithSteps(String[] array, String target, MetricsCollector metrics, StepCollector stepCollector) {
+        return searchStringInternal(array, target, metrics, stepCollector);
     }
 
     /**
@@ -105,6 +117,46 @@ public class LinearSearch implements SearchingAlgorithm {
     public boolean requiresSortedArray() {
         // Linear search works on both sorted and unsorted arrays
         return false;
+    }
+
+    /**
+     * Internal search implementation for String arrays that optionally collects steps.
+     */
+    private int searchStringInternal(String[] array, String target, MetricsCollector metrics, StepCollector stepCollector) {
+        // Record initial state if collecting steps
+        if (stepCollector != null) {
+            stepCollector.recordInitial(array, "Starting Linear Search for target: " + target);
+        }
+        
+        // Iterate through each element sequentially
+        for (int i = 0; i < array.length; i++) {
+            metrics.recordArrayAccess(1);
+            
+            // Record checking this element if collecting steps
+            if (stepCollector != null) {
+                stepCollector.recordCheck(array, i, 
+                    "Checking index " + i + ": Is " + array[i] + " == " + target + "?");
+            }
+            
+            // Compare current element with target
+            metrics.recordComparison(1);
+            if (array[i].equals(target)) {
+                // Target found at index i
+                if (stepCollector != null) {
+                    stepCollector.recordFound(array, i,
+                        "Target " + target + " found at index " + i + "!");
+                }
+                return i;
+            }
+        }
+        
+        // Target not found in array
+        if (stepCollector != null) {
+            stepCollector.recordNotFound(array,
+                "Target " + target + " not found in the array");
+        }
+        
+        return -1;
     }
 }
 

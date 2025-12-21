@@ -27,7 +27,7 @@ public class StepCollector {
     }
     
     /**
-     * Records the initial state.
+     * Records the initial state (for integer arrays).
      */
     public void recordInitial(int[] array, String description) {
         VisualizationStep step = new VisualizationStep(
@@ -40,7 +40,20 @@ public class StepCollector {
     }
     
     /**
-     * Records a comparison (for sorting).
+     * Records the initial state (for string arrays).
+     */
+    public void recordInitial(String[] array, String description) {
+        VisualizationStep step = new VisualizationStep(
+            stepNumber++, 
+            Arrays.copyOf(array, array.length), 
+            "INIT"
+        );
+        step.setDescription(description);
+        steps.add(step);
+    }
+    
+    /**
+     * Records a comparison (for sorting integer arrays).
      */
     public void recordCompare(int[] array, int index1, int index2, String description) {
         VisualizationStep step = new VisualizationStep(
@@ -55,7 +68,22 @@ public class StepCollector {
     }
     
     /**
-     * Records a swap (call AFTER the swap is done).
+     * Records a comparison (for sorting string arrays).
+     */
+    public void recordCompare(String[] array, int index1, int index2, String description) {
+        VisualizationStep step = new VisualizationStep(
+            stepNumber++, 
+            Arrays.copyOf(array, array.length), 
+            "COMPARE"
+        );
+        step.setDescription(description);
+        step.addHighlightedIndex(index1, "RED");
+        step.addHighlightedIndex(index2, "RED");
+        steps.add(step);
+    }
+    
+    /**
+     * Records a swap for integer arrays (call AFTER the swap is done).
      */
     public void recordSwap(int[] array, int index1, int index2, String description) {
         VisualizationStep step = new VisualizationStep(
@@ -70,7 +98,84 @@ public class StepCollector {
     }
     
     /**
-     * Records checking an element (for search algorithms).
+     * Records a swap for string arrays (call AFTER the swap is done).
+     */
+    public void recordSwap(String[] array, int index1, int index2, String description) {
+        VisualizationStep step = new VisualizationStep(
+            stepNumber++, 
+            Arrays.copyOf(array, array.length), 
+            "SWAP"
+        );
+        step.setDescription(description);
+        step.addHighlightedIndex(index1, "YELLOW");
+        step.addHighlightedIndex(index2, "YELLOW");
+        steps.add(step);
+    }
+    
+    /**
+     * Records completion for integer arrays.
+     */
+    public void recordComplete(int[] array, String description) {
+        VisualizationStep step = new VisualizationStep(
+            stepNumber++, 
+            Arrays.copyOf(array, array.length), 
+            "COMPLETE"
+        );
+        step.setDescription(description);
+        // Highlight all in green
+        for (int i = 0; i < array.length; i++) {
+            step.addHighlightedIndex(i, "GREEN");
+        }
+        steps.add(step);
+    }
+    
+    /**
+     * Records completion for string arrays.
+     */
+    public void recordComplete(String[] array, String description) {
+        VisualizationStep step = new VisualizationStep(
+            stepNumber++, 
+            Arrays.copyOf(array, array.length), 
+            "COMPLETE"
+        );
+        step.setDescription(description);
+        // Highlight all in green
+        for (int i = 0; i < array.length; i++) {
+            step.addHighlightedIndex(i, "GREEN");
+        }
+        steps.add(step);
+    }
+    
+    /**
+     * Records a set/insertion operation for integer arrays.
+     */
+    public void recordSet(int[] array, int index, String description) {
+        VisualizationStep step = new VisualizationStep(
+            stepNumber++, 
+            Arrays.copyOf(array, array.length), 
+            "SET"
+        );
+        step.setDescription(description);
+        step.addHighlightedIndex(index, "BLUE");
+        steps.add(step);
+    }
+    
+    /**
+     * Records a set/insertion operation for string arrays.
+     */
+    public void recordSet(String[] array, int index, String description) {
+        VisualizationStep step = new VisualizationStep(
+            stepNumber++, 
+            Arrays.copyOf(array, array.length), 
+            "SET"
+        );
+        step.setDescription(description);
+        step.addHighlightedIndex(index, "BLUE");
+        steps.add(step);
+    }
+    
+    /**
+     * Records a check operation (for searching) on integer arrays.
      */
     public void recordCheck(int[] array, int index, String description) {
         VisualizationStep step = new VisualizationStep(
@@ -79,12 +184,26 @@ public class StepCollector {
             "CHECK"
         );
         step.setDescription(description);
-        step.addHighlightedIndex(index, "BLUE");
+        step.addHighlightedIndex(index, "ORANGE");
         steps.add(step);
     }
     
     /**
-     * Records a range for binary search (left, right, and mid pointers).
+     * Records a check operation (for searching) on string arrays.
+     */
+    public void recordCheck(String[] array, int index, String description) {
+        VisualizationStep step = new VisualizationStep(
+            stepNumber++, 
+            Arrays.copyOf(array, array.length), 
+            "CHECK"
+        );
+        step.setDescription(description);
+        step.addHighlightedIndex(index, "ORANGE");
+        steps.add(step);
+    }
+    
+    /**
+     * Records a range being examined (for binary search) on integer arrays.
      */
     public void recordRange(int[] array, int left, int right, int mid, String description) {
         VisualizationStep step = new VisualizationStep(
@@ -93,14 +212,34 @@ public class StepCollector {
             "RANGE"
         );
         step.setDescription(description);
-        step.addHighlightedIndex(left, "YELLOW");   // Left boundary
-        step.addHighlightedIndex(right, "YELLOW");  // Right boundary
-        step.addHighlightedIndex(mid, "BLUE");      // Mid point (checking)
+        // Highlight the range in light blue and the middle in orange
+        for (int i = left; i <= right; i++) {
+            step.addHighlightedIndex(i, "LIGHTBLUE");
+        }
+        step.addHighlightedIndex(mid, "ORANGE");
         steps.add(step);
     }
     
     /**
-     * Records finding the target (for search algorithms).
+     * Records a range being examined (for binary search) on string arrays.
+     */
+    public void recordRange(String[] array, int left, int right, int mid, String description) {
+        VisualizationStep step = new VisualizationStep(
+            stepNumber++, 
+            Arrays.copyOf(array, array.length), 
+            "RANGE"
+        );
+        step.setDescription(description);
+        // Highlight the range in light blue and the middle in orange
+        for (int i = left; i <= right; i++) {
+            step.addHighlightedIndex(i, "LIGHTBLUE");
+        }
+        step.addHighlightedIndex(mid, "ORANGE");
+        steps.add(step);
+    }
+    
+    /**
+     * Records when target is found (for searching) on integer arrays.
      */
     public void recordFound(int[] array, int index, String description) {
         VisualizationStep step = new VisualizationStep(
@@ -114,7 +253,21 @@ public class StepCollector {
     }
     
     /**
-     * Records not finding the target (for search algorithms).
+     * Records when target is found (for searching) on string arrays.
+     */
+    public void recordFound(String[] array, int index, String description) {
+        VisualizationStep step = new VisualizationStep(
+            stepNumber++, 
+            Arrays.copyOf(array, array.length), 
+            "FOUND"
+        );
+        step.setDescription(description);
+        step.addHighlightedIndex(index, "GREEN");
+        steps.add(step);
+    }
+    
+    /**
+     * Records when target is not found (for searching) on integer arrays.
      */
     public void recordNotFound(int[] array, String description) {
         VisualizationStep step = new VisualizationStep(
@@ -127,19 +280,15 @@ public class StepCollector {
     }
     
     /**
-     * Records completion.
+     * Records when target is not found (for searching) on string arrays.
      */
-    public void recordComplete(int[] array, String description) {
+    public void recordNotFound(String[] array, String description) {
         VisualizationStep step = new VisualizationStep(
             stepNumber++, 
             Arrays.copyOf(array, array.length), 
-            "COMPLETE"
+            "NOT_FOUND"
         );
         step.setDescription(description);
-        // Highlight all in green
-        for (int i = 0; i < array.length; i++) {
-            step.addHighlightedIndex(i, "GREEN");
-        }
         steps.add(step);
     }
     

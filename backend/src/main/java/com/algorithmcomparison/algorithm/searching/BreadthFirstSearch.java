@@ -156,6 +156,14 @@ public class BreadthFirstSearch implements SearchingAlgorithm {
     }
 
     @Override
+    public int search(String[] array, String target, MetricsCollector metrics) {
+        // BFS is graph-based and not directly applicable to String arrays
+        throw new UnsupportedOperationException(
+            "Breadth First Search is a graph-based algorithm and is not applicable to String datasets. " +
+            "Please use Linear Search, Binary Search, or Trie Search for string data.");
+    }
+
+    @Override
     public String getName() {
         return "Breadth First Search";
     }

@@ -15,15 +15,26 @@ import com.algorithmcomparison.util.MetricsCollector;
 public interface SortingAlgorithm {
     
     /**
-     * Sorts the given array in ascending order.
+     * Sorts the given integer array in ascending order.
      * 
      * This method modifies the input array in place and uses the provided
      * MetricsCollector to track performance metrics.
      * 
-     * @param array The array to sort (will be modified)
+     * @param array The integer array to sort (will be modified)
      * @param metrics The metrics collector for tracking performance
      */
     void sort(int[] array, MetricsCollector metrics);
+
+    /**
+     * Sorts the given string array in lexicographic order.
+     * 
+     * This method modifies the input array in place and uses the provided
+     * MetricsCollector to track performance metrics.
+     * 
+     * @param array The string array to sort (will be modified)
+     * @param metrics The metrics collector for tracking performance
+     */
+    void sort(String[] array, MetricsCollector metrics);
 
     /**
      * Gets the name of the sorting algorithm.

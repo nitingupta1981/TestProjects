@@ -30,6 +30,13 @@ public class QuickSort implements SortingAlgorithm {
         }
     }
 
+    @Override
+    public void sort(String[] array, MetricsCollector metrics) {
+        if (array.length > 0) {
+            quickSortString(array, 0, array.length - 1, metrics);
+        }
+    }
+
     /**
      * Recursive quick sort method.
      * 
@@ -110,6 +117,42 @@ public class QuickSort implements SortingAlgorithm {
     @Override
     public boolean isStable() {
         return false;
+    }
+
+    /**
+     * Recursive quick sort for String arrays.
+     */
+    private void quickSortString(String[] array, int low, int high, MetricsCollector metrics) {
+        if (low < high) {
+            int pivotIndex = partitionString(array, low, high, metrics);
+            quickSortString(array, low, pivotIndex - 1, metrics);
+            quickSortString(array, pivotIndex + 1, high, metrics);
+        }
+    }
+
+    /**
+     * Partitions String array using last element as pivot.
+     */
+    private int partitionString(String[] array, int low, int high, MetricsCollector metrics) {
+        // Randomize pivot selection
+        int randomIndex = low + random.nextInt(high - low + 1);
+        metrics.swap(array, randomIndex, high);
+        
+        String pivot = array[high];
+        metrics.recordArrayAccess(1);
+        
+        int i = low - 1;
+        
+        for (int j = low; j < high; j++) {
+            metrics.recordComparison(1);
+            if (array[j].compareTo(pivot) <= 0) {
+                i++;
+                metrics.swap(array, i, j);
+            }
+        }
+        
+        metrics.swap(array, i + 1, high);
+        return i + 1;
     }
 }
 

@@ -20,7 +20,16 @@ export class AlgorithmRunner {
         });
         
         if (!response.ok) {
-            throw new Error('Failed to run sorting comparison');
+            // Try to extract error message from response
+            try {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to run sorting comparison');
+            } catch (e) {
+                if (e.message && e.message !== 'Failed to run sorting comparison') {
+                    throw e;
+                }
+                throw new Error('Failed to run sorting comparison');
+            }
         }
         
         return await response.json();
@@ -39,7 +48,16 @@ export class AlgorithmRunner {
         });
         
         if (!response.ok) {
-            throw new Error('Failed to run searching comparison');
+            // Try to extract error message from response
+            try {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to run searching comparison');
+            } catch (e) {
+                if (e.message && e.message !== 'Failed to run searching comparison') {
+                    throw e;
+                }
+                throw new Error('Failed to run searching comparison');
+            }
         }
         
         return await response.json();

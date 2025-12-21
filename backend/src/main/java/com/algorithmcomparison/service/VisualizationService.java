@@ -46,7 +46,6 @@ public class VisualizationService {
      * @param datasetId The dataset ID
      * @return List of visualization steps
      * @throws IllegalArgumentException if dataset not found
-     * @throws UnsupportedOperationException if dataset type is not INTEGER
      */
     public List<VisualizationStep> visualizeBubbleSort(String datasetId) {
         Dataset dataset = datasetService.getDataset(datasetId);
@@ -54,28 +53,29 @@ public class VisualizationService {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
         }
 
-        // Check dataset type
-        if ("STRING".equals(dataset.getDataType())) {
-            throw new UnsupportedOperationException(
-                "Visualization is currently only supported for INTEGER datasets. " +
-                "Dataset '" + dataset.getName() + "' is of type STRING."
-            );
-        }
-
-        if (dataset.getData() == null) {
-            throw new IllegalStateException("Dataset has no data to visualize");
-        }
-
-        // Create a copy of the data to avoid modifying the original
-        int[] array = Arrays.copyOf(dataset.getData(), dataset.getData().length);
-        
         // Create collectors
         MetricsCollector metrics = new MetricsCollector();
         StepCollector stepCollector = new StepCollector();
         
         // Call the actual BubbleSort algorithm with step collection
         BubbleSort bubbleSort = new BubbleSort();
-        bubbleSort.sortWithSteps(array, metrics, stepCollector);
+        
+        // Handle both INTEGER and STRING datasets
+        if ("STRING".equals(dataset.getDataType())) {
+            if (dataset.getStringData() == null) {
+                throw new IllegalStateException("Dataset has no string data to visualize");
+            }
+            // Create a copy of the data to avoid modifying the original
+            String[] array = Arrays.copyOf(dataset.getStringData(), dataset.getStringData().length);
+            bubbleSort.sortWithSteps(array, metrics, stepCollector);
+        } else {
+            if (dataset.getData() == null) {
+                throw new IllegalStateException("Dataset has no data to visualize");
+            }
+            // Create a copy of the data to avoid modifying the original
+            int[] array = Arrays.copyOf(dataset.getData(), dataset.getData().length);
+            bubbleSort.sortWithSteps(array, metrics, stepCollector);
+        }
         
         // Return the collected steps
         return stepCollector.getSteps();
@@ -111,32 +111,44 @@ public class VisualizationService {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
         }
 
-        // Check dataset type
-        if ("STRING".equals(dataset.getDataType())) {
-            throw new UnsupportedOperationException(
-                "Visualization is currently only supported for INTEGER datasets. " +
-                "Dataset '" + dataset.getName() + "' is of type STRING."
-            );
-        }
-
-        if (dataset.getData() == null) {
-            throw new IllegalStateException("Dataset has no data to visualize");
-        }
-
         List<VisualizationStep> steps = new ArrayList<>();
         
-        // Initial state
-        VisualizationStep initialStep = new VisualizationStep(0, dataset.getData(), "INIT");
-        initialStep.setDescription("Initial state - " + algorithmName);
-        steps.add(initialStep);
+        // Handle both INTEGER and STRING datasets for basic visualization
+        if ("STRING".equals(dataset.getDataType())) {
+            if (dataset.getStringData() == null) {
+                throw new IllegalStateException("Dataset has no string data to visualize");
+            }
+            
+            // Initial state
+            VisualizationStep initialStep = new VisualizationStep(0, dataset.getStringData(), "INIT");
+            initialStep.setDescription("Initial state - " + algorithmName);
+            steps.add(initialStep);
 
-        // Sorted state (assuming algorithm completes successfully)
-        int[] sortedArray = Arrays.copyOf(dataset.getData(), dataset.getData().length);
-        Arrays.sort(sortedArray);
-        
-        VisualizationStep finalStep = new VisualizationStep(1, sortedArray, "COMPLETE");
-        finalStep.setDescription(algorithmName + " complete");
-        steps.add(finalStep);
+            // Sorted state (assuming algorithm completes successfully)
+            String[] sortedArray = Arrays.copyOf(dataset.getStringData(), dataset.getStringData().length);
+            Arrays.sort(sortedArray);
+            
+            VisualizationStep finalStep = new VisualizationStep(1, sortedArray, "COMPLETE");
+            finalStep.setDescription(algorithmName + " complete");
+            steps.add(finalStep);
+        } else {
+            if (dataset.getData() == null) {
+                throw new IllegalStateException("Dataset has no data to visualize");
+            }
+            
+            // Initial state
+            VisualizationStep initialStep = new VisualizationStep(0, dataset.getData(), "INIT");
+            initialStep.setDescription("Initial state - " + algorithmName);
+            steps.add(initialStep);
+
+            // Sorted state (assuming algorithm completes successfully)
+            int[] sortedArray = Arrays.copyOf(dataset.getData(), dataset.getData().length);
+            Arrays.sort(sortedArray);
+            
+            VisualizationStep finalStep = new VisualizationStep(1, sortedArray, "COMPLETE");
+            finalStep.setDescription(algorithmName + " complete");
+            steps.add(finalStep);
+        }
 
         return steps;
     }
@@ -153,23 +165,25 @@ public class VisualizationService {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
         }
 
-        if ("STRING".equals(dataset.getDataType())) {
-            throw new UnsupportedOperationException(
-                "Visualization is currently only supported for INTEGER datasets. " +
-                "Dataset '" + dataset.getName() + "' is of type STRING."
-            );
-        }
-
-        if (dataset.getData() == null) {
-            throw new IllegalStateException("Dataset has no data to visualize");
-        }
-
-        int[] array = Arrays.copyOf(dataset.getData(), dataset.getData().length);
         MetricsCollector metrics = new MetricsCollector();
         StepCollector stepCollector = new StepCollector();
         
         InsertionSort insertionSort = new InsertionSort();
-        insertionSort.sortWithSteps(array, metrics, stepCollector);
+        
+        // Handle both INTEGER and STRING datasets
+        if ("STRING".equals(dataset.getDataType())) {
+            if (dataset.getStringData() == null) {
+                throw new IllegalStateException("Dataset has no string data to visualize");
+            }
+            String[] array = Arrays.copyOf(dataset.getStringData(), dataset.getStringData().length);
+            insertionSort.sortWithSteps(array, metrics, stepCollector);
+        } else {
+            if (dataset.getData() == null) {
+                throw new IllegalStateException("Dataset has no data to visualize");
+            }
+            int[] array = Arrays.copyOf(dataset.getData(), dataset.getData().length);
+            insertionSort.sortWithSteps(array, metrics, stepCollector);
+        }
         
         return stepCollector.getSteps();
     }
@@ -186,23 +200,25 @@ public class VisualizationService {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
         }
 
-        if ("STRING".equals(dataset.getDataType())) {
-            throw new UnsupportedOperationException(
-                "Visualization is currently only supported for INTEGER datasets. " +
-                "Dataset '" + dataset.getName() + "' is of type STRING."
-            );
-        }
-
-        if (dataset.getData() == null) {
-            throw new IllegalStateException("Dataset has no data to visualize");
-        }
-
-        int[] array = Arrays.copyOf(dataset.getData(), dataset.getData().length);
         MetricsCollector metrics = new MetricsCollector();
         StepCollector stepCollector = new StepCollector();
         
         SelectionSort selectionSort = new SelectionSort();
-        selectionSort.sortWithSteps(array, metrics, stepCollector);
+        
+        // Handle both INTEGER and STRING datasets
+        if ("STRING".equals(dataset.getDataType())) {
+            if (dataset.getStringData() == null) {
+                throw new IllegalStateException("Dataset has no string data to visualize");
+            }
+            String[] array = Arrays.copyOf(dataset.getStringData(), dataset.getStringData().length);
+            selectionSort.sortWithSteps(array, metrics, stepCollector);
+        } else {
+            if (dataset.getData() == null) {
+                throw new IllegalStateException("Dataset has no data to visualize");
+            }
+            int[] array = Arrays.copyOf(dataset.getData(), dataset.getData().length);
+            selectionSort.sortWithSteps(array, metrics, stepCollector);
+        }
         
         return stepCollector.getSteps();
     }
@@ -220,26 +236,29 @@ public class VisualizationService {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
         }
 
-        if ("STRING".equals(dataset.getDataType())) {
-            throw new UnsupportedOperationException(
-                "Visualization is currently only supported for INTEGER datasets. " +
-                "Dataset '" + dataset.getName() + "' is of type STRING."
-            );
-        }
-
-        if (dataset.getData() == null) {
-            throw new IllegalStateException("Dataset has no data to visualize");
-        }
-
-        int[] array = Arrays.copyOf(dataset.getData(), dataset.getData().length);
         MetricsCollector metrics = new MetricsCollector();
         StepCollector stepCollector = new StepCollector();
-        
-        // Use provided target or default to middle element
-        int searchTarget = (target != null) ? target : (array.length > 0 ? array[array.length / 2] : 0);
-        
         LinearSearch linearSearch = new LinearSearch();
-        linearSearch.searchWithSteps(array, searchTarget, metrics, stepCollector);
+        
+        // Handle both INTEGER and STRING datasets
+        if ("STRING".equals(dataset.getDataType())) {
+            if (dataset.getStringData() == null) {
+                throw new IllegalStateException("Dataset has no string data to visualize");
+            }
+            String[] array = Arrays.copyOf(dataset.getStringData(), dataset.getStringData().length);
+            // Use provided target or default to middle element
+            String searchTarget = (target != null) ? String.valueOf(target) : 
+                                 (array.length > 0 ? array[array.length / 2] : "");
+            linearSearch.searchWithSteps(array, searchTarget, metrics, stepCollector);
+        } else {
+            if (dataset.getData() == null) {
+                throw new IllegalStateException("Dataset has no data to visualize");
+            }
+            int[] array = Arrays.copyOf(dataset.getData(), dataset.getData().length);
+            // Use provided target or default to middle element
+            int searchTarget = (target != null) ? target : (array.length > 0 ? array[array.length / 2] : 0);
+            linearSearch.searchWithSteps(array, searchTarget, metrics, stepCollector);
+        }
         
         return stepCollector.getSteps();
     }
@@ -257,30 +276,33 @@ public class VisualizationService {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
         }
 
-        if ("STRING".equals(dataset.getDataType())) {
-            throw new UnsupportedOperationException(
-                "Visualization is currently only supported for INTEGER datasets. " +
-                "Dataset '" + dataset.getName() + "' is of type STRING."
-            );
-        }
-
-        if (dataset.getData() == null) {
-            throw new IllegalStateException("Dataset has no data to visualize");
-        }
-
-        int[] array = Arrays.copyOf(dataset.getData(), dataset.getData().length);
-        
-        // Sort the array for binary search
-        Arrays.sort(array);
-        
         MetricsCollector metrics = new MetricsCollector();
         StepCollector stepCollector = new StepCollector();
-        
-        // Use provided target or default to middle element of sorted array
-        int searchTarget = (target != null) ? target : (array.length > 0 ? array[array.length / 2] : 0);
-        
         BinarySearch binarySearch = new BinarySearch();
-        binarySearch.searchWithSteps(array, searchTarget, metrics, stepCollector);
+        
+        // Handle both INTEGER and STRING datasets
+        if ("STRING".equals(dataset.getDataType())) {
+            if (dataset.getStringData() == null) {
+                throw new IllegalStateException("Dataset has no string data to visualize");
+            }
+            String[] array = Arrays.copyOf(dataset.getStringData(), dataset.getStringData().length);
+            // Sort the array for binary search
+            Arrays.sort(array);
+            // Use provided target or default to middle element of sorted array
+            String searchTarget = (target != null) ? String.valueOf(target) : 
+                                 (array.length > 0 ? array[array.length / 2] : "");
+            binarySearch.searchWithSteps(array, searchTarget, metrics, stepCollector);
+        } else {
+            if (dataset.getData() == null) {
+                throw new IllegalStateException("Dataset has no data to visualize");
+            }
+            int[] array = Arrays.copyOf(dataset.getData(), dataset.getData().length);
+            // Sort the array for binary search
+            Arrays.sort(array);
+            // Use provided target or default to middle element of sorted array
+            int searchTarget = (target != null) ? target : (array.length > 0 ? array[array.length / 2] : 0);
+            binarySearch.searchWithSteps(array, searchTarget, metrics, stepCollector);
+        }
         
         return stepCollector.getSteps();
     }

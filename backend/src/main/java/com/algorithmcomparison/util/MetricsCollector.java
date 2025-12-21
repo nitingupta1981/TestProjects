@@ -90,6 +90,18 @@ public class MetricsCollector {
     }
 
     /**
+     * Checks if first string is greater than second (lexicographically) and increments comparison counter.
+     * 
+     * @param a First string
+     * @param b Second string
+     * @return true if a > b lexicographically
+     */
+    public boolean isGreaterThan(String a, String b) {
+        comparisonCount++;
+        return a.compareTo(b) > 0;
+    }
+
+    /**
      * Checks if first value is less than or equal to second and increments comparison counter.
      * 
      * @param a First value
@@ -126,7 +138,7 @@ public class MetricsCollector {
     }
 
     /**
-     * Swaps two elements in an array and increments the swap counter.
+     * Swaps two elements in an integer array and increments the swap counter.
      * 
      * @param array The array containing the elements
      * @param i First index
@@ -136,6 +148,21 @@ public class MetricsCollector {
         swapCount++;
         arrayAccessCount += 4; // 2 reads + 2 writes
         int temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+
+    /**
+     * Swaps two elements in a string array and increments the swap counter.
+     * 
+     * @param array The array containing the elements
+     * @param i First index
+     * @param j Second index
+     */
+    public void swap(String[] array, int i, int j) {
+        swapCount++;
+        arrayAccessCount += 4; // 2 reads + 2 writes
+        String temp = array[i];
         array[i] = array[j];
         array[j] = temp;
     }

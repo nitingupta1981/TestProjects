@@ -16,17 +16,24 @@ import com.algorithmcomparison.util.MetricsCollector;
 public interface SearchingAlgorithm {
     
     /**
-     * Searches for a target value in the given array.
+     * Searches for a target value in the given integer array.
      * 
-     * This method searches for the target value and uses the provided
-     * MetricsCollector to track performance metrics.
-     * 
-     * @param array The array to search in
+     * @param array The integer array to search in
      * @param target The value to search for
      * @param metrics The metrics collector for tracking performance
      * @return The index where target was found, or -1 if not found
      */
     int search(int[] array, int target, MetricsCollector metrics);
+
+    /**
+     * Searches for a target string in the given string array.
+     * 
+     * @param array The string array to search in
+     * @param target The string to search for
+     * @param metrics The metrics collector for tracking performance
+     * @return The index where target was found, or -1 if not found
+     */
+    int search(String[] array, String target, MetricsCollector metrics);
 
     /**
      * Gets the name of the searching algorithm.

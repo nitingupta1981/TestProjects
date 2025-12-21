@@ -26,6 +26,13 @@ public class MergeSort implements SortingAlgorithm {
         }
     }
 
+    @Override
+    public void sort(String[] array, MetricsCollector metrics) {
+        if (array.length > 1) {
+            mergeSortString(array, 0, array.length - 1, metrics);
+        }
+    }
+
     /**
      * Recursive merge sort method.
      * 
@@ -138,6 +145,67 @@ public class MergeSort implements SortingAlgorithm {
     @Override
     public boolean isStable() {
         return true;
+    }
+
+    /**
+     * Recursive merge sort for String arrays.
+     */
+    private void mergeSortString(String[] array, int left, int right, MetricsCollector metrics) {
+        if (left < right) {
+            int mid = left + (right - left) / 2;
+            mergeSortString(array, left, mid, metrics);
+            mergeSortString(array, mid + 1, right, metrics);
+            mergeString(array, left, mid, right, metrics);
+        }
+    }
+
+    /**
+     * Merges two sorted String subarrays.
+     */
+    private void mergeString(String[] array, int left, int mid, int right, MetricsCollector metrics) {
+        int n1 = mid - left + 1;
+        int n2 = right - mid;
+        
+        String[] leftArray = new String[n1];
+        String[] rightArray = new String[n2];
+        
+        for (int i = 0; i < n1; i++) {
+            leftArray[i] = array[left + i];
+            metrics.recordArrayAccess(1);
+        }
+        for (int j = 0; j < n2; j++) {
+            rightArray[j] = array[mid + 1 + j];
+            metrics.recordArrayAccess(1);
+        }
+        
+        int i = 0, j = 0, k = left;
+        
+        while (i < n1 && j < n2) {
+            metrics.recordComparison(1);
+            if (leftArray[i].compareTo(rightArray[j]) <= 0) {
+                array[k] = leftArray[i];
+                i++;
+            } else {
+                array[k] = rightArray[j];
+                j++;
+            }
+            metrics.recordArrayAccess(1);
+            k++;
+        }
+        
+        while (i < n1) {
+            array[k] = leftArray[i];
+            metrics.recordArrayAccess(1);
+            i++;
+            k++;
+        }
+        
+        while (j < n2) {
+            array[k] = rightArray[j];
+            metrics.recordArrayAccess(1);
+            j++;
+            k++;
+        }
     }
 }
 

@@ -40,7 +40,6 @@ public class SortingService {
      * @param algorithmName Name of the sorting algorithm
      * @return AlgorithmResult with performance metrics
      * @throws IllegalArgumentException if dataset not found or algorithm unknown
-     * @throws UnsupportedOperationException if dataset type is not INTEGER
      */
     public AlgorithmResult executeSortingAlgorithm(String datasetId, String algorithmName) {
         // Get dataset
@@ -49,20 +48,7 @@ public class SortingService {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
         }
 
-        // Check dataset type
-        if ("STRING".equals(dataset.getDataType())) {
-            throw new UnsupportedOperationException(
-                "Sorting algorithms currently only support INTEGER datasets. " +
-                "Dataset '" + dataset.getName() + "' is of type STRING."
-            );
-        }
-
-        if (dataset.getData() == null) {
-            throw new IllegalStateException("Dataset has no data to sort");
-        }
-
-        // Create a copy of the data to avoid modifying original
-        int[] dataCopy = Arrays.copyOf(dataset.getData(), dataset.getData().length);
+        System.out.println("DEBUG: Executing " + algorithmName + " on dataset " + datasetId + " (type: " + dataset.getDataType() + ")");
 
         // Get algorithm instance
         SortingAlgorithm algorithm = createSortingAlgorithm(algorithmName);
@@ -73,13 +59,47 @@ public class SortingService {
         // Create metrics collector
         MetricsCollector metrics = new MetricsCollector();
 
-        // Execute algorithm with timing
-        metrics.startTiming();
-        algorithm.sort(dataCopy, metrics);
-        metrics.stopTiming();
+        // Execute based on data type
+        if ("STRING".equals(dataset.getDataType())) {
+            System.out.println("DEBUG: Processing STRING dataset with " + dataset.getStringData().length + " elements");
+            // Handle STRING datasets
+            if (dataset.getStringData() == null) {
+                throw new IllegalStateException("Dataset has no string data to sort");
+            }
+
+            // Create a copy of the data to avoid modifying original
+            String[] dataCopy = Arrays.copyOf(dataset.getStringData(), dataset.getStringData().length);
+
+            // Execute algorithm with timing
+            // The algorithm itself will throw UnsupportedOperationException if it doesn't support strings
+            metrics.startTiming();
+            try {
+                algorithm.sort(dataCopy, metrics);
+            } catch (UnsupportedOperationException e) {
+                // Re-throw with algorithm name for better error messages
+                throw new UnsupportedOperationException(
+                    algorithm.getName() + " does not support STRING datasets", e
+                );
+            }
+            metrics.stopTiming();
+            System.out.println("DEBUG: STRING sort completed. Comparisons: " + metrics.getComparisonCount() + ", Swaps: " + metrics.getSwapCount());
+        } else {
+            // Handle INTEGER datasets
+            if (dataset.getData() == null) {
+                throw new IllegalStateException("Dataset has no data to sort");
+            }
+
+            // Create a copy of the data to avoid modifying original
+            int[] dataCopy = Arrays.copyOf(dataset.getData(), dataset.getData().length);
+
+            // Execute algorithm with timing
+            metrics.startTiming();
+            algorithm.sort(dataCopy, metrics);
+            metrics.stopTiming();
+        }
 
         // Build and return result
-        return new AlgorithmResult.Builder()
+        AlgorithmResult result = new AlgorithmResult.Builder()
                 .algorithmName(algorithm.getName())
                 .datasetId(dataset.getId())
                 .datasetName(dataset.getName())
@@ -91,6 +111,9 @@ public class SortingService {
                 .complexity(algorithm.getTimeComplexity())
                 .resultType("SORT")
                 .build();
+        
+        System.out.println("DEBUG: Built result: " + result);
+        return result;
     }
 
     /**
@@ -101,15 +124,30 @@ public class SortingService {
      * @return List of AlgorithmResults, one for each algorithm
      */
     public List<AlgorithmResult> compareAlgorithms(String datasetId, List<String> algorithmNames) {
+        System.out.println("DEBUG: compareAlgorithms called with dataset=" + datasetId + ", algorithms=" + algorithmNames);
         List<AlgorithmResult> results = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
 
         for (String algorithmName : algorithmNames) {
             try {
                 AlgorithmResult result = executeSortingAlgorithm(datasetId, algorithmName);
                 results.add(result);
+                System.out.println("DEBUG: Added result for " + algorithmName);
             } catch (Exception e) {
-                System.err.println("Error executing " + algorithmName + ": " + e.getMessage());
+                String errorMsg = algorithmName + ": " + e.getMessage();
+                System.err.println("Error executing " + errorMsg);
+                e.printStackTrace();
+                errors.add(errorMsg);
             }
+        }
+
+        System.out.println("DEBUG: Total results: " + results.size() + ", Total errors: " + errors.size());
+
+        // If all algorithms failed, throw an exception with details
+        if (results.isEmpty() && !errors.isEmpty()) {
+            throw new IllegalStateException(
+                "All algorithms failed to execute. Errors: " + String.join("; ", errors)
+            );
         }
 
         return results;

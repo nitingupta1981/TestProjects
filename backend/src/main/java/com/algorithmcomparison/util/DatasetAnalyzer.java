@@ -59,6 +59,46 @@ public class DatasetAnalyzer {
     }
 
     /**
+     * Performs comprehensive analysis on a String dataset.
+     * 
+     * Analyzes characteristics including:
+     * - Size and size category
+     * - Sortedness (lexicographic order)
+     * - Duplicates and unique element count
+     * 
+     * Note: Range and distribution analysis are not applicable for String data.
+     * 
+     * @param data The String array to analyze
+     * @return DatasetCharacteristics containing all analysis results
+     */
+    public static DatasetCharacteristics analyze(String[] data) {
+        DatasetCharacteristics characteristics = new DatasetCharacteristics();
+
+        if (data == null || data.length == 0) {
+            characteristics.setSize(0);
+            return characteristics;
+        }
+
+        // Basic size information
+        characteristics.setSize(data.length);
+
+        // Analyze sortedness
+        analyzeSortedness(data, characteristics);
+
+        // Analyze duplicates
+        analyzeDuplicates(data, characteristics);
+
+        // For String data, range and distribution are not meaningful
+        // Set defaults
+        characteristics.setMinValue(0);
+        characteristics.setMaxValue(0);
+        characteristics.setRangeSize(0);
+        characteristics.setDistribution(DistributionType.RANDOM);
+
+        return characteristics;
+    }
+
+    /**
      * Analyzes sortedness of the dataset.
      * 
      * Checks if array is:
@@ -109,6 +149,49 @@ public class DatasetAnalyzer {
     }
 
     /**
+     * Analyzes sortedness of the String dataset (lexicographic order).
+     * 
+     * @param data The String array to analyze
+     * @param characteristics The characteristics object to update
+     */
+    private static void analyzeSortedness(String[] data, DatasetCharacteristics characteristics) {
+        if (data.length <= 1) {
+            characteristics.setSorted(true);
+            characteristics.setSortedness(100.0);
+            return;
+        }
+
+        int correctOrderPairs = 0;
+        int reverseOrderPairs = 0;
+        int totalPairs = data.length - 1;
+
+        // Check each adjacent pair using lexicographic comparison
+        for (int i = 0; i < data.length - 1; i++) {
+            int comparison = data[i].compareTo(data[i + 1]);
+            if (comparison <= 0) {
+                correctOrderPairs++;
+            }
+            if (comparison >= 0) {
+                reverseOrderPairs++;
+            }
+        }
+
+        // Calculate sortedness percentage
+        double sortedness = (correctOrderPairs * 100.0) / totalPairs;
+        characteristics.setSortedness(sortedness);
+
+        // Check if fully sorted
+        if (correctOrderPairs == totalPairs) {
+            characteristics.setSorted(true);
+        }
+
+        // Check if fully reverse sorted
+        if (reverseOrderPairs == totalPairs) {
+            characteristics.setReverseSorted(true);
+        }
+    }
+
+    /**
      * Analyzes duplicate elements in the dataset.
      * 
      * Determines:
@@ -124,6 +207,37 @@ public class DatasetAnalyzer {
         Set<Integer> uniqueElements = new HashSet<>();
         
         for (int value : data) {
+            uniqueElements.add(value);
+        }
+
+        int uniqueCount = uniqueElements.size();
+        characteristics.setUniqueCount(uniqueCount);
+
+        // Check if duplicates exist
+        boolean hasDuplicates = uniqueCount < data.length;
+        characteristics.setHasDuplicates(hasDuplicates);
+
+        // Calculate duplicate percentage
+        if (hasDuplicates) {
+            int duplicateCount = data.length - uniqueCount;
+            double duplicatePercentage = (duplicateCount * 100.0) / data.length;
+            characteristics.setDuplicatePercentage(duplicatePercentage);
+        } else {
+            characteristics.setDuplicatePercentage(0.0);
+        }
+    }
+
+    /**
+     * Analyzes duplicate elements in the String dataset.
+     * 
+     * @param data The String array to analyze
+     * @param characteristics The characteristics object to update
+     */
+    private static void analyzeDuplicates(String[] data, DatasetCharacteristics characteristics) {
+        // Use HashSet to find unique elements efficiently
+        Set<String> uniqueElements = new HashSet<>();
+        
+        for (String value : data) {
             uniqueElements.add(value);
         }
 
