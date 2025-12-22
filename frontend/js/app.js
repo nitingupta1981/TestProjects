@@ -64,6 +64,12 @@ function setupEventListeners() {
     // Dataset upload
     document.getElementById('upload-dataset-btn').addEventListener('click', handleUploadDataset);
     
+    // CSV file upload
+    document.getElementById('upload-csv-btn').addEventListener('click', () => {
+        document.getElementById('csv-file-input').click();
+    });
+    document.getElementById('csv-file-input').addEventListener('change', handleCSVUpload);
+    
     // Operation type change
     document.getElementById('operation-type').addEventListener('change', handleOperationTypeChange);
     
@@ -228,6 +234,182 @@ async function handleUploadDataset() {
     } catch (error) {
         showMessage('Error uploading dataset: ' + error.message, 'error');
     }
+}
+
+/**
+ * Handles CSV file upload.
+ */
+async function handleCSVUpload(event) {
+    const file = event.target.files[0];
+    
+    if (!file) {
+        return; // No file selected
+    }
+    
+    // Check file extension
+    const fileName = file.name.toLowerCase();
+    if (!fileName.endsWith('.csv') && !fileName.endsWith('.txt')) {
+        showMessage('Please upload a CSV or TXT file', 'error');
+        event.target.value = ''; // Reset file input
+        return;
+    }
+    
+    try {
+        // Read file content
+        const content = await readFileContent(file);
+        
+        // Get the current data type selection
+        const dataType = document.getElementById('data-type').value;
+        
+        // Parse CSV content based on data type
+        let dataArray;
+        
+        if (dataType === 'STRING') {
+            dataArray = parseCSVAsStrings(content);
+        } else {
+            dataArray = parseCSVAsIntegers(content);
+        }
+        
+        if (dataArray.length === 0) {
+            throw new Error('No valid data found in CSV file');
+        }
+        
+        // Use filename (without extension) as default name
+        const defaultName = fileName.replace(/\.(csv|txt)$/, '');
+        const name = prompt('Enter a name for your dataset:', defaultName);
+        
+        if (!name || name.trim() === '') {
+            event.target.value = ''; // Reset file input
+            return; // User cancelled
+        }
+        
+        // Upload the dataset
+        const dataset = await datasetManager.uploadDataset(dataArray, name, dataType);
+        state.datasets.push(dataset);
+        
+        // Clear previous selections and select only the newly uploaded dataset
+        state.selectedDatasets = [dataset.id];
+        
+        renderDatasets();
+        updateAlgorithmAvailability(); // UPDATE ALGORITHMS BASED ON NEW DATASET
+        
+        // Update visualization dropdown with new dataset
+        visualizer.loadDatasetOptions();
+        
+        showMessage(`CSV file uploaded successfully! Loaded ${dataArray.length} items.`, 'success');
+        
+        // Reset file input for next upload
+        event.target.value = '';
+    } catch (error) {
+        showMessage('Error uploading CSV file: ' + error.message, 'error');
+        event.target.value = ''; // Reset file input
+    }
+}
+
+/**
+ * Reads file content as text.
+ */
+function readFileContent(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = (e) => reject(new Error('Failed to read file'));
+        reader.readAsText(file);
+    });
+}
+
+/**
+ * Parses CSV content as integers.
+ * Supports:
+ * - Comma-separated values: 1,2,3,4,5
+ * - Newline-separated values: 1\n2\n3\n4\n5
+ * - Mixed: 1,2,3\n4,5,6
+ */
+function parseCSVAsIntegers(content) {
+    const values = [];
+    
+    // Split by newlines and commas
+    const lines = content.split(/[\r\n]+/);
+    
+    for (const line of lines) {
+        if (!line.trim()) continue; // Skip empty lines
+        
+        // Split by comma or whitespace
+        const parts = line.split(/[,\s\t]+/);
+        
+        for (const part of parts) {
+            const trimmed = part.trim();
+            if (!trimmed) continue; // Skip empty parts
+            
+            const num = parseInt(trimmed);
+            if (isNaN(num)) {
+                throw new Error(`Invalid number found: "${trimmed}"`);
+            }
+            values.push(num);
+        }
+    }
+    
+    return values;
+}
+
+/**
+ * Parses CSV content as strings.
+ * Supports:
+ * - Comma-separated values: apple,banana,cherry
+ * - Newline-separated values: apple\nbanana\ncherry
+ * - Mixed: apple,banana\ncherry,date
+ * - Quoted strings: "apple","banana with space","cherry"
+ */
+function parseCSVAsStrings(content) {
+    const values = [];
+    
+    // Split by newlines
+    const lines = content.split(/[\r\n]+/);
+    
+    for (const line of lines) {
+        if (!line.trim()) continue; // Skip empty lines
+        
+        // Handle quoted CSV values
+        const parts = parseCSVLine(line);
+        
+        for (const part of parts) {
+            const trimmed = part.trim();
+            if (trimmed) {
+                values.push(trimmed);
+            }
+        }
+    }
+    
+    return values;
+}
+
+/**
+ * Parses a single CSV line, handling quoted values.
+ */
+function parseCSVLine(line) {
+    const values = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        
+        if (char === '"') {
+            inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+            values.push(current);
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    
+    // Add the last value
+    if (current || values.length > 0) {
+        values.push(current);
+    }
+    
+    return values;
 }
 
 /**
