@@ -117,6 +117,20 @@ public class DatasetService {
     }
 
     /**
+     * Stores a custom dataset from user-provided string data.
+     * 
+     * @param data Array of strings
+     * @param name Optional name for the dataset
+     * @return Stored dataset
+     */
+    public Dataset storeCustomDataset(String[] data, String name) {
+        String datasetName = (name != null && !name.isEmpty()) ? name : "CUSTOM";
+        Dataset dataset = new Dataset(datasetName, data, "CUSTOM");
+        datasetStore.put(dataset.getId(), dataset);
+        return dataset;
+    }
+
+    /**
      * Retrieves a dataset by ID.
      * 
      * @param datasetId The dataset ID

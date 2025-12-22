@@ -80,24 +80,41 @@ public class DatasetController {
     /**
      * Uploads a custom dataset.
      * 
-     * Request body example:
+     * Request body example for integers:
      * {
      *   "data": [5, 2, 8, 1, 9],
-     *   "name": "My Custom Dataset"
+     *   "name": "My Custom Dataset",
+     *   "dataType": "INTEGER"
      * }
      * 
-     * @param request Map containing dataset data and name
+     * Request body example for strings:
+     * {
+     *   "data": ["apple", "banana", "cherry"],
+     *   "name": "My Custom String Dataset",
+     *   "dataType": "STRING"
+     * }
+     * 
+     * @param request Map containing dataset data, name, and dataType
      * @return Stored dataset
      */
     @PostMapping("/upload")
     public ResponseEntity<Dataset> uploadDataset(@RequestBody Map<String, Object> request) {
         try {
-            @SuppressWarnings("unchecked")
-            List<Integer> dataList = (List<Integer>) request.get("data");
             String name = (String) request.getOrDefault("name", "Custom");
+            String dataType = (String) request.getOrDefault("dataType", "INTEGER");
             
-            int[] data = dataList.stream().mapToInt(Integer::intValue).toArray();
-            Dataset dataset = datasetService.storeCustomDataset(data, name);
+            Dataset dataset;
+            if ("STRING".equalsIgnoreCase(dataType)) {
+                @SuppressWarnings("unchecked")
+                List<String> dataList = (List<String>) request.get("data");
+                String[] data = dataList.toArray(new String[0]);
+                dataset = datasetService.storeCustomDataset(data, name);
+            } else {
+                @SuppressWarnings("unchecked")
+                List<Integer> dataList = (List<Integer>) request.get("data");
+                int[] data = dataList.stream().mapToInt(Integer::intValue).toArray();
+                dataset = datasetService.storeCustomDataset(data, name);
+            }
             
             return ResponseEntity.ok(dataset);
         } catch (Exception e) {

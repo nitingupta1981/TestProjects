@@ -61,6 +61,9 @@ function setupEventListeners() {
     // Dataset generation
     document.getElementById('generate-dataset-btn').addEventListener('click', handleGenerateDataset);
     
+    // Dataset upload
+    document.getElementById('upload-dataset-btn').addEventListener('click', handleUploadDataset);
+    
     // Operation type change
     document.getElementById('operation-type').addEventListener('change', handleOperationTypeChange);
     
@@ -152,6 +155,78 @@ async function handleGenerateDataset() {
         showMessage('Dataset generated and selected successfully!', 'success');
     } catch (error) {
         showMessage('Error generating dataset: ' + error.message, 'error');
+    }
+}
+
+/**
+ * Handles custom dataset upload.
+ */
+async function handleUploadDataset() {
+    const dataType = document.getElementById('data-type').value;
+    
+    // Determine the prompt based on data type
+    let promptMessage, exampleFormat;
+    if (dataType === 'STRING') {
+        promptMessage = 'Enter your custom dataset as comma-separated strings:';
+        exampleFormat = 'Example: apple, banana, cherry, date, elderberry';
+    } else {
+        promptMessage = 'Enter your custom dataset as comma-separated numbers:';
+        exampleFormat = 'Example: 5, 2, 8, 1, 9, 3, 7';
+    }
+    
+    const input = prompt(`${promptMessage}\n\n${exampleFormat}`);
+    
+    if (!input || input.trim() === '') {
+        return; // User cancelled or entered nothing
+    }
+    
+    try {
+        let dataArray;
+        
+        if (dataType === 'STRING') {
+            // Parse as strings, trim whitespace
+            dataArray = input.split(',').map(s => s.trim()).filter(s => s.length > 0);
+            
+            if (dataArray.length === 0) {
+                throw new Error('No valid strings found in input');
+            }
+        } else {
+            // Parse as integers
+            dataArray = input.split(',').map(s => {
+                const num = parseInt(s.trim());
+                if (isNaN(num)) {
+                    throw new Error(`Invalid number: ${s.trim()}`);
+                }
+                return num;
+            });
+            
+            if (dataArray.length === 0) {
+                throw new Error('No valid numbers found in input');
+            }
+        }
+        
+        // Ask for a name for the dataset
+        const name = prompt('Enter a name for your dataset:', `Custom_${dataType}_Dataset`);
+        if (!name || name.trim() === '') {
+            return; // User cancelled
+        }
+        
+        // Upload the dataset
+        const dataset = await datasetManager.uploadDataset(dataArray, name, dataType);
+        state.datasets.push(dataset);
+        
+        // Clear previous selections and select only the newly uploaded dataset
+        state.selectedDatasets = [dataset.id];
+        
+        renderDatasets();
+        updateAlgorithmAvailability(); // UPDATE ALGORITHMS BASED ON NEW DATASET
+        
+        // Update visualization dropdown with new dataset
+        visualizer.loadDatasetOptions();
+        
+        showMessage('Dataset uploaded and selected successfully!', 'success');
+    } catch (error) {
+        showMessage('Error uploading dataset: ' + error.message, 'error');
     }
 }
 

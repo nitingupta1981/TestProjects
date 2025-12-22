@@ -22,11 +22,11 @@ export class DatasetManager {
         return await response.json();
     }
 
-    async uploadDataset(data, name) {
+    async uploadDataset(data, name, dataType = 'INTEGER') {
         const response = await fetch(`${this.apiBaseUrl}/datasets/upload`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data, name })
+            body: JSON.stringify({ data, name, dataType })
         });
         
         if (!response.ok) {
