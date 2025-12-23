@@ -89,11 +89,27 @@ public class VisualizationService {
      * @param target Optional target value for search algorithms (null for sorting)
      * @param sortOrder "ASCENDING" or "DESCENDING" for sorting algorithms
      * @return List of visualization steps
-     * @throws IllegalArgumentException if dataset not found
+     * @throws IllegalArgumentException if dataset not found or too large
      * @throws UnsupportedOperationException if dataset type is not INTEGER
      */
     public List<VisualizationStep> visualizeAlgorithm(String datasetId, String algorithmName, String target, String sortOrder) {
         boolean isDescending = "DESCENDING".equalsIgnoreCase(sortOrder);
+        
+        // Get dataset and check size
+        Dataset dataset = datasetService.getDataset(datasetId);
+        if (dataset == null) {
+            throw new IllegalArgumentException("Dataset not found: " + datasetId);
+        }
+        
+        // Check dataset size limit for visualization
+        int maxSize = getMaxVisualizationSize();
+        if (dataset.getSize() > maxSize) {
+            throw new IllegalArgumentException(
+                "Dataset too large for visualization (" + dataset.getSize() + " elements). " +
+                "Maximum recommended size is " + maxSize + " elements. " +
+                "Large datasets generate too many visualization steps and may cause performance issues."
+            );
+        }
         
         // Check if algorithm has full visualization support
         if (algorithmName.equalsIgnoreCase("Bubble Sort")) {
@@ -120,12 +136,7 @@ public class VisualizationService {
             return visualizeBinarySearch(datasetId, target);
         }
 
-        // Return basic visualization for other algorithms
-        Dataset dataset = datasetService.getDataset(datasetId);
-        if (dataset == null) {
-            throw new IllegalArgumentException("Dataset not found: " + datasetId);
-        }
-
+        // Return basic visualization for other algorithms (only initial and final states)
         List<VisualizationStep> steps = new ArrayList<>();
         
         // Handle both INTEGER and STRING datasets for basic visualization
@@ -443,7 +454,7 @@ public class VisualizationService {
      * @return Maximum recommended size
      */
     public int getMaxVisualizationSize() {
-        return 50; // Limit to 50 elements for smooth visualization
+        return 100; // Limit to 100 elements for smooth visualization
     }
 }
 

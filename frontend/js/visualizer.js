@@ -215,7 +215,8 @@ export class Visualizer {
     }
 
     async loadVisualization() {
-        const datasetId = document.getElementById('vis-dataset-select')?.value;
+        const datasetSelect = document.getElementById('vis-dataset-select');
+        const datasetId = datasetSelect?.value;
         const algorithmName = document.getElementById('vis-algorithm-select')?.value;
         const algorithmType = document.getElementById('vis-algorithm-type')?.value;
         const sortOrder = document.getElementById('vis-sort-order')?.value || 'ASCENDING';
@@ -236,6 +237,32 @@ export class Visualizer {
         if (!datasetId || !algorithmName) {
             alert('Please select a dataset and algorithm');
             return;
+        }
+        
+        // Check dataset size for visualization
+        const selectedOption = datasetSelect.options[datasetSelect.selectedIndex];
+        const datasetText = selectedOption?.textContent || '';
+        const sizeMatch = datasetText.match(/\((\d+)\s+elements?\)/);
+        if (sizeMatch) {
+            const datasetSize = parseInt(sizeMatch[1]);
+            const maxSize = 100; // Match backend limit
+            
+            if (datasetSize > maxSize) {
+                alert(
+                    `❌ Dataset Too Large for Visualization\n\n` +
+                    `Dataset size: ${datasetSize} elements\n` +
+                    `Maximum allowed: ${maxSize} elements\n\n` +
+                    `Why this limit?\n` +
+                    `Large datasets generate thousands of visualization steps which:\n` +
+                    `• Cause performance issues\n` +
+                    `• May crash your browser\n` +
+                    `• Take very long to load\n\n` +
+                    `💡 Solution:\n` +
+                    `For large datasets, please use the "Datasets & Comparison" tab instead.\n` +
+                    `You can run algorithm comparisons on datasets of any size there!`
+                );
+                return; // Block the visualization
+            }
         }
         
         try {
@@ -263,7 +290,9 @@ export class Visualizer {
             });
             
             if (!response.ok) {
-                throw new Error('Failed to load visualization');
+                const errorData = await response.json().catch(() => ({}));
+                const errorMessage = errorData.error || 'Failed to load visualization';
+                throw new Error(errorMessage);
             }
             
             this.steps = await response.json();
@@ -279,7 +308,7 @@ export class Visualizer {
             
         } catch (error) {
             console.error('Error loading visualization:', error);
-            alert('Error loading visualization: ' + error.message);
+            alert('Error loading visualization:\n\n' + error.message);
         }
     }
 
