@@ -68,21 +68,41 @@ export class Visualizer {
         const typeSelect = document.getElementById('vis-algorithm-type');
         const algorithmSelect = document.getElementById('vis-algorithm-select');
         const searchTargetGroup = document.getElementById('vis-search-target-group');
+        const sortOrderGroup = document.getElementById('vis-sort-order-group');
         
         if (typeSelect && algorithmSelect) {
             typeSelect.addEventListener('change', () => {
                 this.populateAlgorithmOptions();
+                this.updateVisControls();
             });
             
             // Trigger initial population
             this.populateAlgorithmOptions();
+            this.updateVisControls();
+        }
+    }
+
+    updateVisControls() {
+        const typeSelect = document.getElementById('vis-algorithm-type');
+        const searchTargetGroup = document.getElementById('vis-search-target-group');
+        const sortOrderGroup = document.getElementById('vis-sort-order-group');
+        
+        if (!typeSelect) return;
+        
+        const type = typeSelect.value;
+        
+        // Show/hide controls based on algorithm type
+        if (searchTargetGroup) {
+            searchTargetGroup.style.display = type === 'SEARCH' ? 'block' : 'none';
+        }
+        if (sortOrderGroup) {
+            sortOrderGroup.style.display = type === 'SORT' ? 'block' : 'none';
         }
     }
 
     populateAlgorithmOptions() {
         const typeSelect = document.getElementById('vis-algorithm-type');
         const algorithmSelect = document.getElementById('vis-algorithm-select');
-        const searchTargetGroup = document.getElementById('vis-search-target-group');
         
         if (!typeSelect || !algorithmSelect) return;
         
@@ -103,10 +123,6 @@ export class Visualizer {
         // Explicitly set the first option as selected
         if (algorithms.length > 0) {
             algorithmSelect.selectedIndex = 0;
-        }
-        
-        if (searchTargetGroup) {
-            searchTargetGroup.style.display = type === 'SEARCH' ? 'block' : 'none';
         }
     }
 
@@ -177,6 +193,7 @@ export class Visualizer {
         const datasetId = document.getElementById('vis-dataset-select')?.value;
         const algorithmName = document.getElementById('vis-algorithm-select')?.value;
         const algorithmType = document.getElementById('vis-algorithm-type')?.value;
+        const sortOrder = document.getElementById('vis-sort-order')?.value || 'ASCENDING';
         
         // Get search target and handle both string and number types
         let searchTarget;
@@ -201,15 +218,23 @@ export class Visualizer {
             const desc = document.getElementById('visualization-description');
             if (desc) desc.textContent = 'Loading visualization...';
             
+            // Build request body
+            const requestBody = {
+                datasetId,
+                algorithmName,
+                target: searchTarget !== undefined ? searchTarget.toString() : undefined
+            };
+            
+            // Add sortOrder for sorting algorithms
+            if (algorithmType === 'SORT') {
+                requestBody.sortOrder = sortOrder;
+            }
+            
             // Call backend visualization API
             const response = await fetch(`${API_BASE_URL}/algorithms/visualize`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    datasetId,
-                    algorithmName,
-                    target: searchTarget !== undefined ? searchTarget.toString() : undefined
-                })
+                body: JSON.stringify(requestBody)
             });
             
             if (!response.ok) {

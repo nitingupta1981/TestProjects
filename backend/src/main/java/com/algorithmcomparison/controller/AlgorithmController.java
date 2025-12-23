@@ -55,6 +55,7 @@ public class AlgorithmController {
      * {
      *   "datasetIds": ["dataset-1", "dataset-2"],
      *   "algorithmNames": ["Quick Sort", "Merge Sort"],
+     *   "sortOrder": "ASCENDING",  // or "DESCENDING"
      *   "includeVisualization": false
      * }
      * 
@@ -65,18 +66,22 @@ public class AlgorithmController {
     public ResponseEntity<?> compareSortingAlgorithms(
             @RequestBody ComparisonRequest request) {
         try {
+            String sortOrder = request.getSortOrder() != null ? request.getSortOrder() : "ASCENDING";
+            
             if (request.getDatasetIds().size() == 1) {
                 // Single dataset comparison
                 List<AlgorithmResult> results = sortingService.compareAlgorithms(
                     request.getDatasetIds().get(0), 
-                    request.getAlgorithmNames()
+                    request.getAlgorithmNames(),
+                    sortOrder
                 );
                 return ResponseEntity.ok(results);
             } else {
                 // Multiple dataset comparison
                 List<AlgorithmResult> results = sortingService.compareOnMultipleDatasets(
                     request.getDatasetIds(), 
-                    request.getAlgorithmNames()
+                    request.getAlgorithmNames(),
+                    sortOrder
                 );
                 return ResponseEntity.ok(results);
             }
@@ -156,10 +161,11 @@ public class AlgorithmController {
      * Request body example:
      * {
      *   "datasetId": "dataset-1",
-     *   "algorithmName": "Bubble Sort"
+     *   "algorithmName": "Bubble Sort",
+     *   "sortOrder": "DESCENDING"  // Optional for sorting algorithms
      * }
      * 
-     * @param request Map containing datasetId and algorithmName
+     * @param request Map containing datasetId, algorithmName, and optional sortOrder
      * @return List of visualization steps
      */
     @PostMapping("/visualize")
@@ -169,9 +175,10 @@ public class AlgorithmController {
             String datasetId = request.get("datasetId");
             String algorithmName = request.get("algorithmName");
             String target = request.get("target"); // For search algorithms - keep as String
+            String sortOrder = request.getOrDefault("sortOrder", "ASCENDING"); // Default to ascending
             
             List<VisualizationStep> steps = visualizationService.visualizeAlgorithm(
-                datasetId, algorithmName, target);
+                datasetId, algorithmName, target, sortOrder);
             
             return ResponseEntity.ok(steps);
         } catch (Exception e) {

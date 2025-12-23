@@ -8,14 +8,15 @@ export class AlgorithmRunner {
         this.apiBaseUrl = apiBaseUrl;
     }
 
-    async runSortComparison(datasetIds, algorithmNames) {
+    async runSortComparison(datasetIds, algorithmNames, sortOrder = 'ASCENDING') {
         const response = await fetch(`${this.apiBaseUrl}/algorithms/sort/compare`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 datasetIds,
                 algorithmNames,
-                operationType: 'SORT'
+                operationType: 'SORT',
+                sortOrder
             })
         });
         

@@ -71,7 +71,8 @@ public class BenchmarkService {
         for (String algorithmName : algorithmNames) {
             for (String datasetId : datasetIds) {
                 try {
-                    AlgorithmResult result = sortingService.executeSortingAlgorithm(datasetId, algorithmName);
+                    // Use default ascending order for benchmarks
+                    AlgorithmResult result = sortingService.executeSortingAlgorithm(datasetId, algorithmName, "ASCENDING");
                     report.addResult(result);
                 } catch (Exception e) {
                     System.err.println("Benchmark error for " + algorithmName + ": " + e.getMessage());

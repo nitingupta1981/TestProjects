@@ -558,15 +558,18 @@ function handleOperationTypeChange() {
     const sortingAlgos = document.getElementById('sorting-algorithms');
     const searchingAlgos = document.getElementById('searching-algorithms');
     const searchTargetGroup = document.getElementById('search-target-group');
+    const sortOrderGroup = document.getElementById('sort-order-group');
     
     if (state.operationType === 'SEARCH') {
         sortingAlgos.style.display = 'none';
         searchingAlgos.style.display = 'block';
         searchTargetGroup.style.display = 'block';
+        sortOrderGroup.style.display = 'none'; // Hide sort order for search
     } else {
         sortingAlgos.style.display = 'block';
         searchingAlgos.style.display = 'none';
         searchTargetGroup.style.display = 'none';
+        sortOrderGroup.style.display = 'block'; // Show sort order for sorting
     }
 }
 
@@ -728,9 +731,12 @@ async function handleRunComparison() {
                 target
             );
         } else {
+            // Get sort order
+            const sortOrder = document.getElementById('sort-order').value;
             results = await algorithmRunner.runSortComparison(
                 state.selectedDatasets,
-                selectedAlgorithms
+                selectedAlgorithms,
+                sortOrder
             );
         }
         

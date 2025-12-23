@@ -38,17 +38,19 @@ public class SortingService {
      * 
      * @param datasetId ID of the dataset to sort
      * @param algorithmName Name of the sorting algorithm
+     * @param sortOrder "ASCENDING" or "DESCENDING"
      * @return AlgorithmResult with performance metrics
      * @throws IllegalArgumentException if dataset not found or algorithm unknown
      */
-    public AlgorithmResult executeSortingAlgorithm(String datasetId, String algorithmName) {
+    public AlgorithmResult executeSortingAlgorithm(String datasetId, String algorithmName, String sortOrder) {
         // Get dataset
         Dataset dataset = datasetService.getDataset(datasetId);
         if (dataset == null) {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
         }
 
-        System.out.println("DEBUG: Executing " + algorithmName + " on dataset " + datasetId + " (type: " + dataset.getDataType() + ")");
+        boolean isDescending = "DESCENDING".equalsIgnoreCase(sortOrder);
+        System.out.println("DEBUG: Executing " + algorithmName + " on dataset " + datasetId + " (type: " + dataset.getDataType() + ", order: " + sortOrder + ")");
 
         // Get algorithm instance
         SortingAlgorithm algorithm = createSortingAlgorithm(algorithmName);
@@ -71,12 +73,14 @@ public class SortingService {
             String[] dataCopy = Arrays.copyOf(dataset.getStringData(), dataset.getStringData().length);
 
             // Execute algorithm with timing
-            // The algorithm itself will throw UnsupportedOperationException if it doesn't support strings
             metrics.startTiming();
             try {
                 algorithm.sort(dataCopy, metrics);
+                // Reverse if descending order
+                if (isDescending) {
+                    reverseArray(dataCopy);
+                }
             } catch (UnsupportedOperationException e) {
-                // Re-throw with algorithm name for better error messages
                 throw new UnsupportedOperationException(
                     algorithm.getName() + " does not support STRING datasets", e
                 );
@@ -95,12 +99,16 @@ public class SortingService {
             // Execute algorithm with timing
             metrics.startTiming();
             algorithm.sort(dataCopy, metrics);
+            // Reverse if descending order
+            if (isDescending) {
+                reverseArray(dataCopy);
+            }
             metrics.stopTiming();
         }
 
         // Build and return result
         AlgorithmResult result = new AlgorithmResult.Builder()
-                .algorithmName(algorithm.getName())
+                .algorithmName(algorithm.getName() + (isDescending ? " (DESC)" : " (ASC)"))
                 .datasetId(dataset.getId())
                 .datasetName(dataset.getName())
                 .datasetSize(dataset.getSize())
@@ -121,16 +129,17 @@ public class SortingService {
      * 
      * @param datasetId ID of the dataset
      * @param algorithmNames List of algorithm names to compare
+     * @param sortOrder "ASCENDING" or "DESCENDING"
      * @return List of AlgorithmResults, one for each algorithm
      */
-    public List<AlgorithmResult> compareAlgorithms(String datasetId, List<String> algorithmNames) {
-        System.out.println("DEBUG: compareAlgorithms called with dataset=" + datasetId + ", algorithms=" + algorithmNames);
+    public List<AlgorithmResult> compareAlgorithms(String datasetId, List<String> algorithmNames, String sortOrder) {
+        System.out.println("DEBUG: compareAlgorithms called with dataset=" + datasetId + ", algorithms=" + algorithmNames + ", sortOrder=" + sortOrder);
         List<AlgorithmResult> results = new ArrayList<>();
         List<String> errors = new ArrayList<>();
 
         for (String algorithmName : algorithmNames) {
             try {
-                AlgorithmResult result = executeSortingAlgorithm(datasetId, algorithmName);
+                AlgorithmResult result = executeSortingAlgorithm(datasetId, algorithmName, sortOrder);
                 results.add(result);
                 System.out.println("DEBUG: Added result for " + algorithmName);
             } catch (Exception e) {
@@ -158,14 +167,16 @@ public class SortingService {
      * 
      * @param datasetIds List of dataset IDs
      * @param algorithmNames List of algorithm names
+     * @param sortOrder "ASCENDING" or "DESCENDING"
      * @return List of all AlgorithmResults
      */
     public List<AlgorithmResult> compareOnMultipleDatasets(List<String> datasetIds, 
-                                                           List<String> algorithmNames) {
+                                                           List<String> algorithmNames,
+                                                           String sortOrder) {
         List<AlgorithmResult> allResults = new ArrayList<>();
 
         for (String datasetId : datasetIds) {
-            List<AlgorithmResult> datasetResults = compareAlgorithms(datasetId, algorithmNames);
+            List<AlgorithmResult> datasetResults = compareAlgorithms(datasetId, algorithmNames, sortOrder);
             allResults.addAll(datasetResults);
         }
 
@@ -234,6 +245,42 @@ public class SortingService {
             }
         }
         return true;
+    }
+
+    /**
+     * Reverses an integer array in place.
+     * Used for descending order sorting.
+     * 
+     * @param array Array to reverse
+     */
+    private void reverseArray(int[] array) {
+        int left = 0;
+        int right = array.length - 1;
+        while (left < right) {
+            int temp = array[left];
+            array[left] = array[right];
+            array[right] = temp;
+            left++;
+            right--;
+        }
+    }
+
+    /**
+     * Reverses a string array in place.
+     * Used for descending order sorting.
+     * 
+     * @param array Array to reverse
+     */
+    private void reverseArray(String[] array) {
+        int left = 0;
+        int right = array.length - 1;
+        while (left < right) {
+            String temp = array[left];
+            array[left] = array[right];
+            array[right] = temp;
+            left++;
+            right--;
+        }
     }
 }
 

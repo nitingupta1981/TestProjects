@@ -87,18 +87,33 @@ public class VisualizationService {
      * @param datasetId The dataset ID
      * @param algorithmName The algorithm name
      * @param target Optional target value for search algorithms (null for sorting)
+     * @param sortOrder "ASCENDING" or "DESCENDING" for sorting algorithms
      * @return List of visualization steps
      * @throws IllegalArgumentException if dataset not found
      * @throws UnsupportedOperationException if dataset type is not INTEGER
      */
-    public List<VisualizationStep> visualizeAlgorithm(String datasetId, String algorithmName, String target) {
+    public List<VisualizationStep> visualizeAlgorithm(String datasetId, String algorithmName, String target, String sortOrder) {
+        boolean isDescending = "DESCENDING".equalsIgnoreCase(sortOrder);
+        
         // Check if algorithm has full visualization support
         if (algorithmName.equalsIgnoreCase("Bubble Sort")) {
-            return visualizeBubbleSort(datasetId);
+            List<VisualizationStep> steps = visualizeBubbleSort(datasetId);
+            if (isDescending) {
+                reverseVisualizationSteps(steps);
+            }
+            return steps;
         } else if (algorithmName.equalsIgnoreCase("Insertion Sort")) {
-            return visualizeInsertionSort(datasetId);
+            List<VisualizationStep> steps = visualizeInsertionSort(datasetId);
+            if (isDescending) {
+                reverseVisualizationSteps(steps);
+            }
+            return steps;
         } else if (algorithmName.equalsIgnoreCase("Selection Sort")) {
-            return visualizeSelectionSort(datasetId);
+            List<VisualizationStep> steps = visualizeSelectionSort(datasetId);
+            if (isDescending) {
+                reverseVisualizationSteps(steps);
+            }
+            return steps;
         } else if (algorithmName.equalsIgnoreCase("Linear Search")) {
             return visualizeLinearSearch(datasetId, target);
         } else if (algorithmName.equalsIgnoreCase("Binary Search")) {
@@ -128,8 +143,13 @@ public class VisualizationService {
             String[] sortedArray = Arrays.copyOf(dataset.getStringData(), dataset.getStringData().length);
             Arrays.sort(sortedArray);
             
+            // Reverse if descending
+            if (isDescending) {
+                reverseArray(sortedArray);
+            }
+            
             VisualizationStep finalStep = new VisualizationStep(1, sortedArray, "COMPLETE");
-            finalStep.setDescription(algorithmName + " complete");
+            finalStep.setDescription(algorithmName + " complete" + (isDescending ? " (descending)" : ""));
             steps.add(finalStep);
         } else {
             if (dataset.getData() == null) {
@@ -145,12 +165,100 @@ public class VisualizationService {
             int[] sortedArray = Arrays.copyOf(dataset.getData(), dataset.getData().length);
             Arrays.sort(sortedArray);
             
+            // Reverse if descending
+            if (isDescending) {
+                reverseArray(sortedArray);
+            }
+            
             VisualizationStep finalStep = new VisualizationStep(1, sortedArray, "COMPLETE");
-            finalStep.setDescription(algorithmName + " complete");
+            finalStep.setDescription(algorithmName + " complete" + (isDescending ? " (descending)" : ""));
             steps.add(finalStep);
         }
 
         return steps;
+    }
+    
+    /**
+     * Reverses all array states in visualization steps for descending order.
+     * Also adjusts highlighted indices to match the reversed positions.
+     * 
+     * @param steps List of visualization steps to reverse
+     */
+    private void reverseVisualizationSteps(List<VisualizationStep> steps) {
+        for (VisualizationStep step : steps) {
+            Object[] arrayState = step.getArrayState();
+            if (arrayState != null && arrayState.length > 0) {
+                int arrayLength = arrayState.length;
+                
+                // Reverse the array state
+                reverseArrayState(arrayState);
+                
+                // Reverse the highlighted indices to match new positions
+                List<Integer> oldIndices = step.getHighlightedIndices();
+                if (oldIndices != null && !oldIndices.isEmpty()) {
+                    List<Integer> newIndices = new ArrayList<>();
+                    
+                    for (int oldIndex : oldIndices) {
+                        // Calculate the reversed index: newIndex = arrayLength - 1 - oldIndex
+                        int newIndex = arrayLength - 1 - oldIndex;
+                        newIndices.add(newIndex);
+                    }
+                    
+                    step.setHighlightedIndices(newIndices);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Reverses an Object array in place.
+     * 
+     * @param array Array to reverse
+     */
+    private void reverseArrayState(Object[] array) {
+        int left = 0;
+        int right = array.length - 1;
+        while (left < right) {
+            Object temp = array[left];
+            array[left] = array[right];
+            array[right] = temp;
+            left++;
+            right--;
+        }
+    }
+    
+    /**
+     * Reverses an integer array in place.
+     * 
+     * @param array Array to reverse
+     */
+    private void reverseArray(int[] array) {
+        int left = 0;
+        int right = array.length - 1;
+        while (left < right) {
+            int temp = array[left];
+            array[left] = array[right];
+            array[right] = temp;
+            left++;
+            right--;
+        }
+    }
+    
+    /**
+     * Reverses a string array in place.
+     * 
+     * @param array Array to reverse
+     */
+    private void reverseArray(String[] array) {
+        int left = 0;
+        int right = array.length - 1;
+        while (left < right) {
+            String temp = array[left];
+            array[left] = array[right];
+            array[right] = temp;
+            left++;
+            right--;
+        }
     }
 
     /**

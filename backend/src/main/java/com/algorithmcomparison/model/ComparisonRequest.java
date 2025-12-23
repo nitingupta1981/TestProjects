@@ -18,6 +18,7 @@ public class ComparisonRequest {
     private String operationType; // "SORT" or "SEARCH"
     private Integer searchTarget; // For search operations (INTEGER datasets)
     private String searchTargetString; // For search operations (STRING datasets)
+    private String sortOrder; // "ASCENDING" or "DESCENDING" for sort operations
     private boolean includeVisualization;
 
     /**
@@ -81,6 +82,14 @@ public class ComparisonRequest {
         this.searchTargetString = searchTargetString;
     }
 
+    public String getSortOrder() {
+        return sortOrder;
+    }
+
+    public void setSortOrder(String sortOrder) {
+        this.sortOrder = sortOrder;
+    }
+
     public boolean isIncludeVisualization() {
         return includeVisualization;
     }
@@ -119,6 +128,7 @@ public class ComparisonRequest {
                 ", operationType='" + operationType + '\'' +
                 ", searchTarget=" + searchTarget +
                 ", searchTargetString='" + searchTargetString + '\'' +
+                ", sortOrder='" + sortOrder + '\'' +
                 ", includeVisualization=" + includeVisualization +
                 '}';
     }

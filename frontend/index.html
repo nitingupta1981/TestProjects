@@ -81,6 +81,14 @@
                     </select>
                 </div>
 
+                <div id="sort-order-group" class="form-group">
+                    <label for="sort-order">Sort Order:</label>
+                    <select id="sort-order">
+                        <option value="ASCENDING">Ascending (↑)</option>
+                        <option value="DESCENDING">Descending (↓)</option>
+                    </select>
+                </div>
+
                 <div id="search-target-group" class="form-group" style="display: none;">
                     <label for="search-target">Search Target:</label>
                     <input type="number" id="search-target" value="50">
@@ -148,6 +156,13 @@
                     <div class="form-group">
                         <label>Select Algorithm:</label>
                         <select id="vis-algorithm-select"></select>
+                    </div>
+                    <div class="form-group" id="vis-sort-order-group">
+                        <label>Sort Order:</label>
+                        <select id="vis-sort-order">
+                            <option value="ASCENDING">Ascending (↑)</option>
+                            <option value="DESCENDING">Descending (↓)</option>
+                        </select>
                     </div>
                     <div class="form-group" id="vis-search-target-group" style="display: none;">
                         <label>Search Target Value:</label>
