@@ -43,9 +43,12 @@ public class StepCollector {
      * Records the initial state (for string arrays).
      */
     public void recordInitial(String[] array, String description) {
+        String[] arrayCopy = new String[array.length];
+        System.arraycopy(array, 0, arrayCopy, 0, array.length);
+        
         VisualizationStep step = new VisualizationStep(
             stepNumber++, 
-            Arrays.copyOf(array, array.length), 
+            arrayCopy, 
             "INIT"
         );
         step.setDescription(description);
@@ -71,9 +74,12 @@ public class StepCollector {
      * Records a comparison (for sorting string arrays).
      */
     public void recordCompare(String[] array, int index1, int index2, String description) {
+        String[] arrayCopy = new String[array.length];
+        System.arraycopy(array, 0, arrayCopy, 0, array.length);
+        
         VisualizationStep step = new VisualizationStep(
             stepNumber++, 
-            Arrays.copyOf(array, array.length), 
+            arrayCopy, 
             "COMPARE"
         );
         step.setDescription(description);
@@ -101,9 +107,12 @@ public class StepCollector {
      * Records a swap for string arrays (call AFTER the swap is done).
      */
     public void recordSwap(String[] array, int index1, int index2, String description) {
+        String[] arrayCopy = new String[array.length];
+        System.arraycopy(array, 0, arrayCopy, 0, array.length);
+        
         VisualizationStep step = new VisualizationStep(
             stepNumber++, 
-            Arrays.copyOf(array, array.length), 
+            arrayCopy, 
             "SWAP"
         );
         step.setDescription(description);
@@ -133,9 +142,12 @@ public class StepCollector {
      * Records completion for string arrays.
      */
     public void recordComplete(String[] array, String description) {
+        String[] arrayCopy = new String[array.length];
+        System.arraycopy(array, 0, arrayCopy, 0, array.length);
+        
         VisualizationStep step = new VisualizationStep(
             stepNumber++, 
-            Arrays.copyOf(array, array.length), 
+            arrayCopy, 
             "COMPLETE"
         );
         step.setDescription(description);
@@ -164,9 +176,12 @@ public class StepCollector {
      * Records a set/insertion operation for string arrays.
      */
     public void recordSet(String[] array, int index, String description) {
+        String[] arrayCopy = new String[array.length];
+        System.arraycopy(array, 0, arrayCopy, 0, array.length);
+        
         VisualizationStep step = new VisualizationStep(
             stepNumber++, 
-            Arrays.copyOf(array, array.length), 
+            arrayCopy, 
             "SET"
         );
         step.setDescription(description);
@@ -192,9 +207,12 @@ public class StepCollector {
      * Records a check operation (for searching) on string arrays.
      */
     public void recordCheck(String[] array, int index, String description) {
+        String[] arrayCopy = new String[array.length];
+        System.arraycopy(array, 0, arrayCopy, 0, array.length);
+        
         VisualizationStep step = new VisualizationStep(
             stepNumber++, 
-            Arrays.copyOf(array, array.length), 
+            arrayCopy, 
             "CHECK"
         );
         step.setDescription(description);
@@ -224,9 +242,12 @@ public class StepCollector {
      * Records a range being examined (for binary search) on string arrays.
      */
     public void recordRange(String[] array, int left, int right, int mid, String description) {
+        String[] arrayCopy = new String[array.length];
+        System.arraycopy(array, 0, arrayCopy, 0, array.length);
+        
         VisualizationStep step = new VisualizationStep(
             stepNumber++, 
-            Arrays.copyOf(array, array.length), 
+            arrayCopy, 
             "RANGE"
         );
         step.setDescription(description);
@@ -256,9 +277,12 @@ public class StepCollector {
      * Records when target is found (for searching) on string arrays.
      */
     public void recordFound(String[] array, int index, String description) {
+        String[] arrayCopy = new String[array.length];
+        System.arraycopy(array, 0, arrayCopy, 0, array.length);
+        
         VisualizationStep step = new VisualizationStep(
             stepNumber++, 
-            Arrays.copyOf(array, array.length), 
+            arrayCopy, 
             "FOUND"
         );
         step.setDescription(description);
@@ -283,9 +307,12 @@ public class StepCollector {
      * Records when target is not found (for searching) on string arrays.
      */
     public void recordNotFound(String[] array, String description) {
+        String[] arrayCopy = new String[array.length];
+        System.arraycopy(array, 0, arrayCopy, 0, array.length);
+        
         VisualizationStep step = new VisualizationStep(
             stepNumber++, 
-            Arrays.copyOf(array, array.length), 
+            arrayCopy, 
             "NOT_FOUND"
         );
         step.setDescription(description);

@@ -16,7 +16,7 @@ import java.util.List;
 public class VisualizationStep {
     
     private int stepNumber;
-    private int[] arrayState;
+    private Object[] arrayState;  // Changed to Object[] to support both int and String
     private String operation; // e.g., "COMPARE", "SWAP", "INSERT", "PIVOT", "FOUND"
     private List<Integer> highlightedIndices;
     private String description;
@@ -31,21 +31,38 @@ public class VisualizationStep {
     }
 
     /**
-     * Constructor with step number and array state.
+     * Constructor with step number and integer array state.
      * 
      * @param stepNumber The step number in the visualization sequence
-     * @param arrayState Current state of the array
+     * @param arrayState Current state of the integer array
      * @param operation Type of operation being performed
      */
     public VisualizationStep(int stepNumber, int[] arrayState, String operation) {
         this();
         this.stepNumber = stepNumber;
-        this.arrayState = Arrays.copyOf(arrayState, arrayState.length);
+        this.arrayState = new Object[arrayState.length];
+        for (int i = 0; i < arrayState.length; i++) {
+            this.arrayState[i] = arrayState[i];
+        }
         this.operation = operation;
     }
 
     /**
-     * Constructor with description.
+     * Constructor with step number and string array state.
+     * 
+     * @param stepNumber The step number in the visualization sequence
+     * @param arrayState Current state of the string array
+     * @param operation Type of operation being performed
+     */
+    public VisualizationStep(int stepNumber, String[] arrayState, String operation) {
+        this();
+        this.stepNumber = stepNumber;
+        this.arrayState = Arrays.copyOf(arrayState, arrayState.length, Object[].class);
+        this.operation = operation;
+    }
+
+    /**
+     * Constructor with description (for integer arrays).
      * 
      * @param stepNumber The step number
      * @param arrayState Current array state
@@ -53,6 +70,19 @@ public class VisualizationStep {
      * @param description Human-readable description of the step
      */
     public VisualizationStep(int stepNumber, int[] arrayState, String operation, String description) {
+        this(stepNumber, arrayState, operation);
+        this.description = description;
+    }
+
+    /**
+     * Constructor with description (for string arrays).
+     * 
+     * @param stepNumber The step number
+     * @param arrayState Current array state
+     * @param operation Operation type
+     * @param description Human-readable description of the step
+     */
+    public VisualizationStep(int stepNumber, String[] arrayState, String operation, String description) {
         this(stepNumber, arrayState, operation);
         this.description = description;
     }
@@ -67,12 +97,29 @@ public class VisualizationStep {
         this.stepNumber = stepNumber;
     }
 
-    public int[] getArrayState() {
+    public Object[] getArrayState() {
         return arrayState;
     }
 
-    public void setArrayState(int[] arrayState) {
+    public void setArrayState(Object[] arrayState) {
         this.arrayState = arrayState;
+    }
+
+    /**
+     * Sets array state from integer array.
+     */
+    public void setArrayState(int[] arrayState) {
+        this.arrayState = new Object[arrayState.length];
+        for (int i = 0; i < arrayState.length; i++) {
+            this.arrayState[i] = arrayState[i];
+        }
+    }
+
+    /**
+     * Sets array state from string array.
+     */
+    public void setArrayState(String[] arrayState) {
+        this.arrayState = Arrays.copyOf(arrayState, arrayState.length, Object[].class);
     }
 
     public String getOperation() {
@@ -133,12 +180,11 @@ public class VisualizationStep {
      * @return A new VisualizationStep with copied data
      */
     public VisualizationStep copy() {
-        VisualizationStep copy = new VisualizationStep(
-            this.stepNumber, 
-            Arrays.copyOf(this.arrayState, this.arrayState.length),
-            this.operation,
-            this.description
-        );
+        VisualizationStep copy = new VisualizationStep();
+        copy.setStepNumber(this.stepNumber);
+        copy.setArrayState(Arrays.copyOf(this.arrayState, this.arrayState.length));
+        copy.setOperation(this.operation);
+        copy.setDescription(this.description);
         copy.setHighlightedIndices(new ArrayList<>(this.highlightedIndices));
         copy.setColors(new ArrayList<>(this.colors));
         return copy;

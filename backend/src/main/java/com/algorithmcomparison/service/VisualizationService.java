@@ -140,7 +140,8 @@ public class VisualizationService {
             steps.add(initialStep);
 
             // Sorted state (assuming algorithm completes successfully)
-            String[] sortedArray = Arrays.copyOf(dataset.getStringData(), dataset.getStringData().length);
+            String[] sortedArray = new String[dataset.getStringData().length];
+            System.arraycopy(dataset.getStringData(), 0, sortedArray, 0, dataset.getStringData().length);
             Arrays.sort(sortedArray);
             
             // Reverse if descending

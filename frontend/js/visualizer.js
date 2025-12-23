@@ -15,14 +15,20 @@ export class Visualizer {
         this.speed = 5;
         this.animationTimeout = null;
         
+        // All sorting algorithms
         this.sortingAlgorithms = [
             'Bubble Sort', 'Selection Sort', 'Insertion Sort', 'Quick Sort',
             'Merge Sort', 'Heap Sort', 'Shell Sort', 'Counting Sort'
         ];
         
+        // All searching algorithms
         this.searchingAlgorithms = [
             'Linear Search', 'Binary Search', 'Depth First Search', 'Breadth First Search'
         ];
+        
+        // Algorithms with full step-by-step visualization support
+        this.supportedSortingAlgorithms = ['Bubble Sort', 'Insertion Sort', 'Selection Sort'];
+        this.supportedSearchingAlgorithms = ['Linear Search', 'Binary Search'];
     }
 
     initialize() {
@@ -109,20 +115,39 @@ export class Visualizer {
         const type = typeSelect.value;
         algorithmSelect.innerHTML = '';
         
-        // Get all algorithms based on type (no filtering)
+        // Get all algorithms and supported algorithms based on type
         const algorithms = type === 'SEARCH' ? this.searchingAlgorithms : this.sortingAlgorithms;
+        const supportedAlgorithms = type === 'SEARCH' ? this.supportedSearchingAlgorithms : this.supportedSortingAlgorithms;
+        
+        let firstEnabledIndex = -1;
         
         // Populate dropdown with all algorithms
         algorithms.forEach((algo, index) => {
             const option = document.createElement('option');
             option.value = algo;
-            option.textContent = algo;
+            
+            const isSupported = supportedAlgorithms.includes(algo);
+            
+            if (isSupported) {
+                // Fully supported algorithm
+                option.textContent = algo;
+                option.disabled = false;
+                if (firstEnabledIndex === -1) {
+                    firstEnabledIndex = index;
+                }
+            } else {
+                // Not fully supported - disable and mark
+                option.textContent = `${algo} (Visualization not supported)`;
+                option.disabled = true;
+                option.style.color = '#999';
+            }
+            
             algorithmSelect.appendChild(option);
         });
         
-        // Explicitly set the first option as selected
-        if (algorithms.length > 0) {
-            algorithmSelect.selectedIndex = 0;
+        // Set the first enabled option as selected
+        if (firstEnabledIndex !== -1) {
+            algorithmSelect.selectedIndex = firstEnabledIndex;
         }
     }
 
@@ -243,25 +268,6 @@ export class Visualizer {
             
             this.steps = await response.json();
             this.currentStep = 0;
-            
-            // Check if this is a limited visualization (only 2 steps = start and end)
-            const supportedAlgorithms = [
-                'Bubble Sort', 'Insertion Sort', 'Selection Sort', 
-                'Linear Search', 'Binary Search'
-            ];
-            
-            if (this.steps.length <= 2 && !supportedAlgorithms.includes(algorithmName)) {
-                const continueVis = confirm(
-                    `Note: Full step-by-step visualization is currently available for:\n` +
-                    `  • Sorting: Bubble Sort, Insertion Sort, Selection Sort\n` +
-                    `  • Searching: Linear Search, Binary Search\n\n` +
-                    `${algorithmName} will show only the initial and final states.\n\n` +
-                    `Continue with limited visualization?`
-                );
-                if (!continueVis) {
-                    return;
-                }
-            }
             
             // Show the player, hide setup
             document.getElementById('visualization-setup').style.display = 'none';
