@@ -65,6 +65,10 @@ public class ExportController {
             @SuppressWarnings("unchecked")
             List<String> algorithmNames = (List<String>) request.get("algorithmNames");
             
+            if (algorithmNames == null || algorithmNames.isEmpty()) {
+                return ResponseEntity.badRequest().build();
+            }
+            
             BenchmarkReport report;
             
             if ("SORT".equalsIgnoreCase(operationType)) {

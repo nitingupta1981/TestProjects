@@ -7,6 +7,7 @@ import com.algorithmcomparison.model.Dataset;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -29,7 +30,7 @@ public class BenchmarkService {
     private final SearchingService searchingService;
 
     // In-memory storage for benchmark reports (session-based)
-    private final Map<String, Map<String, BenchmarkReport>> sessionReportStore = new HashMap<>();
+    private final Map<String, Map<String, BenchmarkReport>> sessionReportStore = new ConcurrentHashMap<>();
 
     /**
      * Constructor with dependency injection.
@@ -57,8 +58,8 @@ public class BenchmarkService {
      * @return BenchmarkReport with all results and statistics
      */
     public BenchmarkReport runSortingBenchmark(String sessionId, List<String> algorithmNames, 
-                                               List<Integer> datasetSizes,
-                                               String datasetType) {
+                                              List<Integer> datasetSizes,
+                                              String datasetType) {
         BenchmarkReport report = new BenchmarkReport("Sorting Benchmark - " + datasetType);
         
         // Generate datasets for each size
@@ -90,7 +91,7 @@ public class BenchmarkService {
         report.setEndTime(System.currentTimeMillis());
         
         // Store report in session-based store
-        Map<String, BenchmarkReport> sessionStore = sessionReportStore.computeIfAbsent(sessionId, k -> new HashMap<>());
+        Map<String, BenchmarkReport> sessionStore = sessionReportStore.computeIfAbsent(sessionId, k -> new ConcurrentHashMap<>());
         sessionStore.put(report.getId(), report);
         
         return report;
@@ -168,8 +169,14 @@ public class BenchmarkService {
     private BenchmarkStatistics calculateStatistics(List<AlgorithmResult> allResults, 
                                                     String algorithmName) {
         // Filter results for this algorithm
+        // Note: Algorithm names in results may have " (ASC)" or " (DESC)" suffix, so we need to strip it for matching
         List<AlgorithmResult> algorithmResults = allResults.stream()
-            .filter(r -> r.getAlgorithmName().equals(algorithmName))
+            .filter(r -> {
+                String resultAlgoName = r.getAlgorithmName();
+                // Remove " (ASC)" or " (DESC)" suffix if present
+                String normalizedName = resultAlgoName.replaceAll(" \\((ASC|DESC)\\)$", "");
+                return normalizedName.equals(algorithmName);
+            })
             .collect(Collectors.toList());
 
         if (algorithmResults.isEmpty()) {
@@ -295,6 +302,28 @@ public class BenchmarkService {
      */
     public void clearAllReports() {
         sessionReportStore.clear();
+    }
+
+    /**
+     * Clears all benchmark reports for a specific session.
+     * Called when a session expires.
+     * 
+     * @param sessionId The session ID to clear
+     */
+    public void clearSessionReports(String sessionId) {
+        sessionReportStore.remove(sessionId);
+    }
+
+    /**
+     * Gets the total number of reports across all sessions.
+     * Used for monitoring memory usage.
+     * 
+     * @return Total count of benchmark reports
+     */
+    public int getTotalReportCount() {
+        return sessionReportStore.values().stream()
+            .mapToInt(Map::size)
+            .sum();
     }
 }
 
