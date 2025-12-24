@@ -120,49 +120,33 @@ public class AlgorithmController {
         try {
             String sessionId = session.getId();
             
+            // Check if string search is requested
+            if (request.getSearchTargetString() != null) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "error", "String search is currently not supported. Searching algorithms only support INTEGER datasets."
+                ));
+            }
+            
+            // Integer search
+            int target = request.getSearchTarget() != null ? request.getSearchTarget() : 0;
+            
             if (request.getDatasetIds().size() == 1) {
                 // Single dataset comparison
-                List<AlgorithmResult> results;
-                if (request.getSearchTargetString() != null) {
-                    // String search
-                    results = searchingService.compareAlgorithms(
-                        sessionId,
-                        request.getDatasetIds().get(0), 
-                        request.getAlgorithmNames(),
-                        request.getSearchTargetString()
-                    );
-                } else {
-                    // Integer search
-                    int target = request.getSearchTarget() != null ? request.getSearchTarget() : 0;
-                    results = searchingService.compareAlgorithms(
-                        sessionId,
-                        request.getDatasetIds().get(0), 
-                        request.getAlgorithmNames(),
-                        target
-                    );
-                }
+                List<AlgorithmResult> results = searchingService.compareAlgorithms(
+                    sessionId,
+                    request.getDatasetIds().get(0), 
+                    request.getAlgorithmNames(),
+                    target
+                );
                 return ResponseEntity.ok(results);
             } else {
                 // Multiple dataset comparison
-                List<AlgorithmResult> results;
-                if (request.getSearchTargetString() != null) {
-                    // String search
-                    results = searchingService.compareOnMultipleDatasets(
-                        sessionId,
-                        request.getDatasetIds(), 
-                        request.getAlgorithmNames(),
-                        request.getSearchTargetString()
-                    );
-                } else {
-                    // Integer search
-                    int target = request.getSearchTarget() != null ? request.getSearchTarget() : 0;
-                    results = searchingService.compareOnMultipleDatasets(
-                        sessionId,
-                        request.getDatasetIds(), 
-                        request.getAlgorithmNames(),
-                        target
-                    );
-                }
+                List<AlgorithmResult> results = searchingService.compareOnMultipleDatasets(
+                    sessionId,
+                    request.getDatasetIds(), 
+                    request.getAlgorithmNames(),
+                    target
+                );
                 return ResponseEntity.ok(results);
             }
         } catch (Exception e) {

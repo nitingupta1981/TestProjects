@@ -20,9 +20,13 @@ import { Comparator } from './comparator.js';
 import { Benchmarking } from './benchmarking.js';
 import { Exporter } from './exporter.js';
 
-// API Base URL
-// const API_BASE_URL = 'http://localhost:8080/api';
-const API_BASE_URL = 'https://algocompare-backend-210924058354.europe-west1.run.app/api';
+
+// API Base URL - automatically detect environment
+const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:8080/api'
+    : 'https://algocompare-backend-210924058354.europe-west1.run.app/api';
+
+console.log('Using API:', API_BASE_URL);
 
 
 // Application State
@@ -417,7 +421,15 @@ function parseCSVLine(line) {
  */
 function renderDatasets() {
     const container = document.getElementById('datasets-items');
+    const analyzeBtn = document.getElementById('analyze-dataset-btn');
     container.innerHTML = '';
+    
+    // Show/hide analyze button based on whether datasets exist
+    if (state.datasets.length > 0) {
+        analyzeBtn.style.display = 'inline-block';
+    } else {
+        analyzeBtn.style.display = 'none';
+    }
     
     state.datasets.forEach(dataset => {
         const item = document.createElement('div');
