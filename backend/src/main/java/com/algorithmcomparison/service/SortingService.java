@@ -8,282 +8,231 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 /**
- * Service for executing sorting algorithms and collecting results.
- * 
- * Provides functionality for:
- * - Running individual sorting algorithms
- * - Comparing multiple sorting algorithms
- * - Factory pattern for algorithm instantiation
+ * Optimized service for executing sorting algorithms with unified data type handling.
  * 
  * @author Algorithm Comparison Team
- * @version 1.0
+ * @version 3.0 (Highly Optimized)
  */
 @Service
 public class SortingService {
 
     private final DatasetService datasetService;
 
-    /**
-     * Constructor with dependency injection.
-     * 
-     * @param datasetService Service for dataset management
-     */
     public SortingService(DatasetService datasetService) {
         this.datasetService = datasetService;
     }
 
-    /**
-     * Executes a sorting algorithm on a dataset and collects metrics.
-     * 
-     * @param sessionId The user's session ID
-     * @param datasetId ID of the dataset to sort
-     * @param algorithmName Name of the sorting algorithm
-     * @param sortOrder "ASCENDING" or "DESCENDING"
-     * @return AlgorithmResult with performance metrics
-     * @throws IllegalArgumentException if dataset not found or algorithm unknown
-     */
-    public AlgorithmResult executeSortingAlgorithm(String sessionId, String datasetId, String algorithmName, String sortOrder) {
-        // Get dataset
-        Dataset dataset = datasetService.getDataset(sessionId, datasetId);
-        if (dataset == null) {
-            throw new IllegalArgumentException("Dataset not found: " + datasetId);
-        }
+    // ==================== Public API ====================
 
+    public AlgorithmResult executeSortingAlgorithm(String sessionId, String datasetId, 
+                                                   String algorithmName, String sortOrder) {
+        Dataset dataset = getValidatedDataset(sessionId, datasetId);
+        SortingAlgorithm algorithm = getValidatedAlgorithm(algorithmName);
         boolean isDescending = "DESCENDING".equalsIgnoreCase(sortOrder);
-        System.out.println("DEBUG: Executing " + algorithmName + " on dataset " + datasetId + " (type: " + dataset.getDataType() + ", order: " + sortOrder + ")");
 
-        // Get algorithm instance
-        SortingAlgorithm algorithm = createSortingAlgorithm(algorithmName);
-        if (algorithm == null) {
-            throw new IllegalArgumentException("Unknown sorting algorithm: " + algorithmName);
-        }
+        System.out.println("DEBUG: Executing " + algorithmName + " on dataset " + datasetId + 
+                         " (type: " + dataset.getDataType() + ", order: " + sortOrder + ")");
 
-        // Create metrics collector
         MetricsCollector metrics = new MetricsCollector();
-
-        // Execute based on data type
-        if ("STRING".equals(dataset.getDataType())) {
-            System.out.println("DEBUG: Processing STRING dataset with " + dataset.getStringData().length + " elements");
-            // Handle STRING datasets
-            if (dataset.getStringData() == null) {
-                throw new IllegalStateException("Dataset has no string data to sort");
-            }
-
-            // Create a copy of the data to avoid modifying original
-            String[] dataCopy = Arrays.copyOf(dataset.getStringData(), dataset.getStringData().length);
-
-            // Execute algorithm with timing
-            metrics.startTiming();
-            try {
-                algorithm.sort(dataCopy, metrics);
-                // Reverse if descending order
-                if (isDescending) {
-                    reverseArray(dataCopy);
-                }
-            } catch (UnsupportedOperationException e) {
-                throw new UnsupportedOperationException(
-                    algorithm.getName() + " does not support STRING datasets", e
-                );
-            }
-            metrics.stopTiming();
-            System.out.println("DEBUG: STRING sort completed. Comparisons: " + metrics.getComparisonCount() + ", Swaps: " + metrics.getSwapCount());
-        } else {
-            // Handle INTEGER datasets
-            if (dataset.getData() == null) {
-                throw new IllegalStateException("Dataset has no data to sort");
-            }
-
-            // Create a copy of the data to avoid modifying original
-            int[] dataCopy = Arrays.copyOf(dataset.getData(), dataset.getData().length);
-
-            // Execute algorithm with timing
-            metrics.startTiming();
-            algorithm.sort(dataCopy, metrics);
-            // Reverse if descending order
-            if (isDescending) {
-                reverseArray(dataCopy);
-            }
-            metrics.stopTiming();
-        }
-
-        // Build and return result
-        AlgorithmResult result = new AlgorithmResult.Builder()
-                .algorithmName(algorithm.getName() + (isDescending ? " (DESC)" : " (ASC)"))
-                .datasetId(dataset.getId())
-                .datasetName(dataset.getName())
-                .datasetSize(dataset.getSize())
-                .executionTimeNanos(metrics.getExecutionTimeNanos())
-                .comparisonCount(metrics.getComparisonCount())
-                .swapCount(metrics.getSwapCount())
-                .arrayAccessCount(metrics.getArrayAccessCount())
-                .complexity(algorithm.getTimeComplexity())
-                .resultType("SORT")
-                .build();
+        executeSort(dataset, algorithm, metrics, isDescending);
         
-        System.out.println("DEBUG: Built result: " + result);
-        return result;
+        return buildResult(algorithm, dataset, metrics, isDescending);
     }
 
-    /**
-     * Compares multiple sorting algorithms on a single dataset.
-     * 
-     * @param sessionId The user's session ID
-     * @param datasetId ID of the dataset
-     * @param algorithmNames List of algorithm names to compare
-     * @param sortOrder "ASCENDING" or "DESCENDING"
-     * @return List of AlgorithmResults, one for each algorithm
-     */
-    public List<AlgorithmResult> compareAlgorithms(String sessionId, String datasetId, List<String> algorithmNames, String sortOrder) {
-        System.out.println("DEBUG: compareAlgorithms called with session=" + sessionId + ", dataset=" + datasetId + ", algorithms=" + algorithmNames + ", sortOrder=" + sortOrder);
-        List<AlgorithmResult> results = new ArrayList<>();
-        List<String> errors = new ArrayList<>();
-
-        for (String algorithmName : algorithmNames) {
-            try {
-                AlgorithmResult result = executeSortingAlgorithm(sessionId, datasetId, algorithmName, sortOrder);
-                results.add(result);
-                System.out.println("DEBUG: Added result for " + algorithmName);
-            } catch (Exception e) {
-                String errorMsg = algorithmName + ": " + e.getMessage();
-                System.err.println("Error executing " + errorMsg);
-                e.printStackTrace();
-                errors.add(errorMsg);
-            }
-        }
-
-        System.out.println("DEBUG: Total results: " + results.size() + ", Total errors: " + errors.size());
-
-        // If all algorithms failed, throw an exception with details
-        if (results.isEmpty() && !errors.isEmpty()) {
-            throw new IllegalStateException(
-                "All algorithms failed to execute. Errors: " + String.join("; ", errors)
-            );
-        }
-
-        return results;
+    public List<AlgorithmResult> compareAlgorithms(String sessionId, String datasetId, 
+                                                    List<String> algorithmNames, String sortOrder) {
+        System.out.println("DEBUG: compareAlgorithms - session=" + sessionId + ", dataset=" + datasetId);
+        return executeWithErrorHandling(algorithmNames, alg -> 
+            executeSortingAlgorithm(sessionId, datasetId, alg, sortOrder));
     }
 
-    /**
-     * Compares multiple sorting algorithms across multiple datasets.
-     * 
-     * @param sessionId The user's session ID
-     * @param datasetIds List of dataset IDs
-     * @param algorithmNames List of algorithm names
-     * @param sortOrder "ASCENDING" or "DESCENDING"
-     * @return List of all AlgorithmResults
-     */
     public List<AlgorithmResult> compareOnMultipleDatasets(String sessionId, List<String> datasetIds, 
-                                                           List<String> algorithmNames,
-                                                           String sortOrder) {
-        List<AlgorithmResult> allResults = new ArrayList<>();
-
-        for (String datasetId : datasetIds) {
-            List<AlgorithmResult> datasetResults = compareAlgorithms(sessionId, datasetId, algorithmNames, sortOrder);
-            allResults.addAll(datasetResults);
-        }
-
-        return allResults;
+                                                           List<String> algorithmNames, String sortOrder) {
+        return datasetIds.stream()
+            .flatMap(id -> compareAlgorithms(sessionId, id, algorithmNames, sortOrder).stream())
+            .toList();
     }
 
-    /**
-     * Gets a list of all available sorting algorithms.
-     * 
-     * @return List of algorithm names
-     */
     public List<String> getAvailableAlgorithms() {
-        return Arrays.asList(
-            "Bubble Sort",
-            "Selection Sort",
-            "Insertion Sort",
-            "Quick Sort",
-            "Merge Sort",
-            "Heap Sort",
-            "Shell Sort",
-            "Counting Sort"
-        );
+        return Arrays.asList("Bubble Sort", "Selection Sort", "Insertion Sort", 
+                           "Quick Sort", "Merge Sort", "Heap Sort", "Shell Sort", "Counting Sort");
     }
 
-    /**
-     * Factory method to create sorting algorithm instances.
-     * Uses the Factory Pattern to instantiate algorithms by name.
-     * 
-     * @param algorithmName Name of the algorithm
-     * @return SortingAlgorithm instance, or null if unknown
-     */
-    private SortingAlgorithm createSortingAlgorithm(String algorithmName) {
-        switch (algorithmName.toLowerCase().replace(" ", "")) {
-            case "bubblesort":
-                return new BubbleSort();
-            case "selectionsort":
-                return new SelectionSort();
-            case "insertionsort":
-                return new InsertionSort();
-            case "quicksort":
-                return new QuickSort();
-            case "mergesort":
-                return new MergeSort();
-            case "heapsort":
-                return new HeapSort();
-            case "shellsort":
-                return new ShellSort();
-            case "countingsort":
-                return new CountingSort();
-            default:
-                return null;
-        }
-    }
-
-    /**
-     * Verifies if an array is correctly sorted.
-     * Useful for testing and validation.
-     * 
-     * @param array Array to verify
-     * @return true if sorted in ascending order
-     */
     public boolean verifySorted(int[] array) {
         for (int i = 0; i < array.length - 1; i++) {
-            if (array[i] > array[i + 1]) {
-                return false;
-            }
+            if (array[i] > array[i + 1]) return false;
         }
         return true;
     }
 
+    // ==================== Core Unified Logic ====================
+
     /**
-     * Reverses an integer array in place.
-     * Used for descending order sorting.
-     * 
-     * @param array Array to reverse
+     * Unified sort execution for both String and Integer datasets.
+     * Uses strategy pattern to eliminate code duplication.
      */
-    private void reverseArray(int[] array) {
-        int left = 0;
-        int right = array.length - 1;
-        while (left < right) {
-            int temp = array[left];
-            array[left] = array[right];
-            array[right] = temp;
-            left++;
-            right--;
+    private void executeSort(Dataset dataset, SortingAlgorithm algorithm, 
+                            MetricsCollector metrics, boolean isDescending) {
+        if ("STRING".equals(dataset.getDataType())) {
+            executeSortForType(
+                dataset.getStringData(),
+                "string data",
+                data -> algorithm.sort(data, metrics),
+                this::reverseArray,
+                metrics,
+                isDescending
+            );
+        } else {
+            executeSortForType(
+                dataset.getData(),
+                "data",
+                data -> algorithm.sort(data, metrics),
+                this::reverseArray,
+                metrics,
+                isDescending
+            );
         }
     }
 
     /**
-     * Reverses a string array in place.
-     * Used for descending order sorting.
+     * Generic sort execution template that works for any array type.
+     * Eliminates duplication between String and Integer handling.
      * 
-     * @param array Array to reverse
+     * @param <T> Array type (int[] or String[])
      */
+    private <T> void executeSortForType(T originalData, String dataTypeName,
+                                        Consumer<T> sortOperation,
+                                        Consumer<T> reverseOperation,
+                                        MetricsCollector metrics,
+                                        boolean isDescending) {
+        validateData(originalData, dataTypeName);
+        
+        T dataCopy = copyArray(originalData);
+        
+        metrics.startTiming();
+        try {
+            sortOperation.accept(dataCopy);
+            if (isDescending) {
+                reverseOperation.accept(dataCopy);
+            }
+        } catch (UnsupportedOperationException e) {
+            throw new UnsupportedOperationException(
+                "Algorithm does not support " + dataTypeName.toUpperCase() + " datasets", e);
+        } finally {
+            metrics.stopTiming();
+        }
+        
+        System.out.println("DEBUG: " + dataTypeName.toUpperCase() + " sort completed. " +
+                         "Comparisons: " + metrics.getComparisonCount() + 
+                         ", Swaps: " + metrics.getSwapCount());
+    }
+
+    // ==================== Helper Methods ====================
+
+    private Dataset getValidatedDataset(String sessionId, String datasetId) {
+        Dataset dataset = datasetService.getDataset(sessionId, datasetId);
+        if (dataset == null) {
+            throw new IllegalArgumentException("Dataset not found: " + datasetId);
+        }
+        return dataset;
+    }
+
+    private SortingAlgorithm getValidatedAlgorithm(String algorithmName) {
+        SortingAlgorithm algorithm = createSortingAlgorithm(algorithmName);
+        if (algorithm == null) {
+            throw new IllegalArgumentException("Unknown sorting algorithm: " + algorithmName);
+        }
+        return algorithm;
+    }
+
+    private void validateData(Object data, String typeName) {
+        if (data == null) {
+            throw new IllegalStateException("Dataset has no " + typeName + " to sort");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T copyArray(T original) {
+        if (original instanceof int[] intArray) {
+            return (T) Arrays.copyOf(intArray, intArray.length);
+        } else if (original instanceof String[] stringArray) {
+            return (T) Arrays.copyOf(stringArray, stringArray.length);
+        }
+        throw new IllegalArgumentException("Unsupported array type");
+    }
+
+    private <T> List<T> executeWithErrorHandling(List<String> algorithmNames, 
+                                                  Function<String, T> executor) {
+        List<T> results = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+
+        algorithmNames.forEach(algorithmName -> {
+            try {
+                results.add(executor.apply(algorithmName));
+                System.out.println("DEBUG: Added result for " + algorithmName);
+            } catch (Exception e) {
+                String errorMsg = algorithmName + ": " + e.getMessage();
+                System.err.println("Error executing " + errorMsg);
+                errors.add(errorMsg);
+            }
+        });
+
+        if (results.isEmpty() && !errors.isEmpty()) {
+            throw new IllegalStateException(
+                "All algorithms failed to execute. Errors: " + String.join("; ", errors));
+        }
+
+        System.out.println("DEBUG: Total results: " + results.size() + ", errors: " + errors.size());
+        return results;
+    }
+
+    private AlgorithmResult buildResult(SortingAlgorithm algorithm, Dataset dataset, 
+                                       MetricsCollector metrics, boolean isDescending) {
+        return new AlgorithmResult.Builder()
+            .algorithmName(algorithm.getName() + (isDescending ? " (DESC)" : " (ASC)"))
+            .datasetId(dataset.getId())
+            .datasetName(dataset.getName())
+            .datasetSize(dataset.getSize())
+            .executionTimeNanos(metrics.getExecutionTimeNanos())
+            .comparisonCount(metrics.getComparisonCount())
+            .swapCount(metrics.getSwapCount())
+            .arrayAccessCount(metrics.getArrayAccessCount())
+            .complexity(algorithm.getTimeComplexity())
+            .resultType("SORT")
+            .build();
+    }
+
+    private SortingAlgorithm createSortingAlgorithm(String algorithmName) {
+        return switch (algorithmName.toLowerCase().replace(" ", "")) {
+            case "bubblesort" -> new BubbleSort();
+            case "selectionsort" -> new SelectionSort();
+            case "insertionsort" -> new InsertionSort();
+            case "quicksort" -> new QuickSort();
+            case "mergesort" -> new MergeSort();
+            case "heapsort" -> new HeapSort();
+            case "shellsort" -> new ShellSort();
+            case "countingsort" -> new CountingSort();
+            default -> null;
+        };
+    }
+
+    private void reverseArray(int[] array) {
+        for (int i = 0, j = array.length - 1; i < j; i++, j--) {
+            int temp = array[i];
+            array[i] = array[j];
+            array[j] = temp;
+        }
+    }
+
     private void reverseArray(String[] array) {
-        int left = 0;
-        int right = array.length - 1;
-        while (left < right) {
-            String temp = array[left];
-            array[left] = array[right];
-            array[right] = temp;
-            left++;
-            right--;
+        for (int i = 0, j = array.length - 1; i < j; i++, j--) {
+            String temp = array[i];
+            array[i] = array[j];
+            array[j] = temp;
         }
     }
 }
-
