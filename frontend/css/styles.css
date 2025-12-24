@@ -366,7 +366,7 @@ select option:disabled {
 
 .results-table th,
 .results-table td {
-    padding: 12px;
+    padding: 14px 16px;
     text-align: left;
     border-bottom: 1px solid #ddd;
 }
@@ -615,6 +615,33 @@ footer {
     .btn {
         width: 100%;
         margin-right: 0;
+        margin-bottom: 10px;
+    }
+    
+    /* Results table mobile optimizations */
+    .results-table {
+        font-size: 0.85em;
+    }
+    
+    .results-table th,
+    .results-table td {
+        padding: 8px 6px;
+        white-space: nowrap;
+    }
+    
+    /* Make container scrollable on mobile */
+    #results-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-bottom: 15px;
+    }
+    
+    /* Stack buttons in results section */
+    #results-section .btn,
+    #benchmark-section .btn {
+        display: block;
+        margin-bottom: 10px;
     }
 }
+
 
