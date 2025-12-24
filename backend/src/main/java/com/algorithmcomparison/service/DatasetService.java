@@ -152,7 +152,7 @@ public class DatasetService {
         
         // Update the name to indicate it's a benchmark dataset with data type and sequence
         String dataTypeLabel = "STRING".equals(dataset.getDataType()) ? "STR" : "INT";
-        String benchmarkName = String.format("[Benchmark #%d] %s_%s - Size %d", sequence, type, dataTypeLabel, size);
+        String benchmarkName = String.format("Benchmark #%d %s_%s - Size %d", sequence, type, dataTypeLabel, size);
         dataset.setName(benchmarkName);
         
         // Re-store the dataset with updated name

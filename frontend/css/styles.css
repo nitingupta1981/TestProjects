@@ -400,6 +400,52 @@ select option:disabled {
 }
 
 /* Benchmark Results */
+.benchmark-info {
+    background: #f8f9fa;
+    border-left: 4px solid #667eea;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.benchmark-info h3 {
+    color: #667eea;
+    margin-bottom: 15px;
+    font-size: 1.5em;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 10px;
+}
+
+.benchmark-metadata {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.benchmark-metadata p {
+    margin: 5px 0;
+    font-size: 0.95em;
+    color: #555;
+}
+
+.benchmark-metadata strong {
+    display: inline-block;
+    margin-right: 8px;
+    color: #333;
+    font-weight: 600;
+}
+
+.badge {
+    display: inline-block;
+    background: #667eea;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.85em;
+}
+
 .benchmark-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));

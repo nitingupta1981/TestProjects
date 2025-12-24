@@ -37,11 +37,51 @@ export class Benchmarking {
     }
 
     formatBenchmarkReport(report) {
+        // Extract data type from report name or dataset names
+        let dataType = 'N/A';
+        let datasetSizes = new Set();
+        
+        // First, try to extract from report name (e.g., "Sorting Benchmark - RANDOM (STRING)")
+        if (report.reportName) {
+            const match = report.reportName.match(/\(([A-Z]+)\)$/);
+            if (match) {
+                dataType = match[1];
+            }
+        }
+        
+        // If not found in report name, try to extract from dataset names
+        if (dataType === 'N/A' && report.results && report.results.length > 0) {
+            // Check if dataset names contain _STR or _INT
+            const firstDatasetName = report.results[0].datasetName || '';
+            if (firstDatasetName.includes('_STR')) {
+                dataType = 'STRING';
+            } else if (firstDatasetName.includes('_INT')) {
+                dataType = 'INTEGER';
+            }
+        }
+        
+        // Collect unique dataset sizes
+        if (report.results && report.results.length > 0) {
+            report.results.forEach(result => {
+                if (result.datasetSize) {
+                    datasetSizes.add(result.datasetSize);
+                }
+            });
+        }
+        
+        const datasetSizesStr = datasetSizes.size > 0 
+            ? Array.from(datasetSizes).sort((a, b) => a - b).join(', ')
+            : 'N/A';
+        
         let html = `
             <div class="benchmark-info">
                 <h3>${report.reportName}</h3>
-                <p>Total Runs: ${report.totalRuns}</p>
-                <p>Duration: ${report.totalDurationMillis} ms</p>
+                <div class="benchmark-metadata">
+                    <p><strong>Data Type:</strong> <span class="badge">${dataType}</span></p>
+                    <p><strong>Dataset Sizes:</strong> ${datasetSizesStr} elements</p>
+                    <p><strong>Total Runs:</strong> ${report.totalRuns}</p>
+                    <p><strong>Duration:</strong> ${report.totalDurationMillis} ms</p>
+                </div>
             </div>
             <div class="benchmark-stats">
         `;

@@ -159,8 +159,9 @@ export class Visualizer {
             const datasets = await response.json();
             
             // Filter out benchmark datasets (they're too large for visualization)
+            // Check for both old format "[Benchmark]" and new format "[Benchmark #N]"
             const visualizableDatasets = datasets.filter(dataset => 
-                !dataset.name.startsWith('[Benchmark]')
+                !dataset.name.includes('Benchmark')
             );
             
             const select = document.getElementById('vis-dataset-select');
