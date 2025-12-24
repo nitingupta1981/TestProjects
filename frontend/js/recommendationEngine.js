@@ -12,6 +12,7 @@ export class RecommendationEngine {
         const response = await fetch(`${this.apiBaseUrl}/algorithms/recommend`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include', // Enable cookies for session management
             body: JSON.stringify({ datasetId, operationType })
         });
         

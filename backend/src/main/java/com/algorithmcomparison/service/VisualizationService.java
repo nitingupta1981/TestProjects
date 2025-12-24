@@ -43,12 +43,13 @@ public class VisualizationService {
      * 
      * This method calls the actual BubbleSort implementation with a StepCollector.
      * 
+     * @param sessionId The user's session ID
      * @param datasetId The dataset ID
      * @return List of visualization steps
      * @throws IllegalArgumentException if dataset not found
      */
-    public List<VisualizationStep> visualizeBubbleSort(String datasetId) {
-        Dataset dataset = datasetService.getDataset(datasetId);
+    public List<VisualizationStep> visualizeBubbleSort(String sessionId, String datasetId) {
+        Dataset dataset = datasetService.getDataset(sessionId, datasetId);
         if (dataset == null) {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
         }
@@ -84,6 +85,7 @@ public class VisualizationService {
     /**
      * Generates visualization steps for a generic algorithm.
      * 
+     * @param sessionId The user's session ID
      * @param datasetId The dataset ID
      * @param algorithmName The algorithm name
      * @param target Optional target value for search algorithms (null for sorting)
@@ -92,11 +94,11 @@ public class VisualizationService {
      * @throws IllegalArgumentException if dataset not found or too large
      * @throws UnsupportedOperationException if dataset type is not INTEGER
      */
-    public List<VisualizationStep> visualizeAlgorithm(String datasetId, String algorithmName, String target, String sortOrder) {
+    public List<VisualizationStep> visualizeAlgorithm(String sessionId, String datasetId, String algorithmName, String target, String sortOrder) {
         boolean isDescending = "DESCENDING".equalsIgnoreCase(sortOrder);
         
         // Get dataset and check size
-        Dataset dataset = datasetService.getDataset(datasetId);
+        Dataset dataset = datasetService.getDataset(sessionId, datasetId);
         if (dataset == null) {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
         }
@@ -113,27 +115,27 @@ public class VisualizationService {
         
         // Check if algorithm has full visualization support
         if (algorithmName.equalsIgnoreCase("Bubble Sort")) {
-            List<VisualizationStep> steps = visualizeBubbleSort(datasetId);
+            List<VisualizationStep> steps = visualizeBubbleSort(sessionId, datasetId);
             if (isDescending) {
                 reverseVisualizationSteps(steps);
             }
             return steps;
         } else if (algorithmName.equalsIgnoreCase("Insertion Sort")) {
-            List<VisualizationStep> steps = visualizeInsertionSort(datasetId);
+            List<VisualizationStep> steps = visualizeInsertionSort(sessionId, datasetId);
             if (isDescending) {
                 reverseVisualizationSteps(steps);
             }
             return steps;
         } else if (algorithmName.equalsIgnoreCase("Selection Sort")) {
-            List<VisualizationStep> steps = visualizeSelectionSort(datasetId);
+            List<VisualizationStep> steps = visualizeSelectionSort(sessionId, datasetId);
             if (isDescending) {
                 reverseVisualizationSteps(steps);
             }
             return steps;
         } else if (algorithmName.equalsIgnoreCase("Linear Search")) {
-            return visualizeLinearSearch(datasetId, target);
+            return visualizeLinearSearch(sessionId, datasetId, target);
         } else if (algorithmName.equalsIgnoreCase("Binary Search")) {
-            return visualizeBinarySearch(datasetId, target);
+            return visualizeBinarySearch(sessionId, datasetId, target);
         }
 
         // Return basic visualization for other algorithms (only initial and final states)
@@ -276,11 +278,12 @@ public class VisualizationService {
     /**
      * Generates visualization steps for Insertion Sort algorithm.
      * 
+     * @param sessionId The user's session ID
      * @param datasetId The dataset ID
      * @return List of visualization steps
      */
-    private List<VisualizationStep> visualizeInsertionSort(String datasetId) {
-        Dataset dataset = datasetService.getDataset(datasetId);
+    private List<VisualizationStep> visualizeInsertionSort(String sessionId, String datasetId) {
+        Dataset dataset = datasetService.getDataset(sessionId, datasetId);
         if (dataset == null) {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
         }
@@ -311,11 +314,12 @@ public class VisualizationService {
     /**
      * Generates visualization steps for Selection Sort algorithm.
      * 
+     * @param sessionId The user's session ID
      * @param datasetId The dataset ID
      * @return List of visualization steps
      */
-    private List<VisualizationStep> visualizeSelectionSort(String datasetId) {
-        Dataset dataset = datasetService.getDataset(datasetId);
+    private List<VisualizationStep> visualizeSelectionSort(String sessionId, String datasetId) {
+        Dataset dataset = datasetService.getDataset(sessionId, datasetId);
         if (dataset == null) {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
         }
@@ -346,12 +350,13 @@ public class VisualizationService {
     /**
      * Generates visualization steps for Linear Search algorithm.
      * 
+     * @param sessionId The user's session ID
      * @param datasetId The dataset ID
      * @param target Optional target value to search for (if null, uses middle element)
      * @return List of visualization steps
      */
-    private List<VisualizationStep> visualizeLinearSearch(String datasetId, String target) {
-        Dataset dataset = datasetService.getDataset(datasetId);
+    private List<VisualizationStep> visualizeLinearSearch(String sessionId, String datasetId, String target) {
+        Dataset dataset = datasetService.getDataset(sessionId, datasetId);
         if (dataset == null) {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
         }
@@ -396,12 +401,13 @@ public class VisualizationService {
     /**
      * Generates visualization steps for Binary Search algorithm.
      * 
+     * @param sessionId The user's session ID
      * @param datasetId The dataset ID
      * @param target Optional target value to search for (if null, uses middle element of sorted array)
      * @return List of visualization steps
      */
-    private List<VisualizationStep> visualizeBinarySearch(String datasetId, String target) {
-        Dataset dataset = datasetService.getDataset(datasetId);
+    private List<VisualizationStep> visualizeBinarySearch(String sessionId, String datasetId, String target) {
+        Dataset dataset = datasetService.getDataset(sessionId, datasetId);
         if (dataset == null) {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
         }

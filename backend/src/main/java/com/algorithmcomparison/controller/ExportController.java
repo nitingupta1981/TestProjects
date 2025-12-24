@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpSession;
 import java.util.List;
 import java.util.Map;
 
@@ -23,11 +24,10 @@ import java.util.Map;
  * - POST /api/results/export - Export with custom data
  * 
  * @author Algorithm Comparison Team
- * @version 1.0
+ * @version 2.0
  */
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*")
 public class ExportController {
 
     private final ExportService exportService;
@@ -53,11 +53,13 @@ public class ExportController {
      * }
      * 
      * @param request Benchmark configuration
+     * @param session HTTP session for user isolation
      * @return Benchmark report
      */
     @PostMapping("/benchmark/run")
-    public ResponseEntity<BenchmarkReport> runBenchmark(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<BenchmarkReport> runBenchmark(@RequestBody Map<String, Object> request, HttpSession session) {
         try {
+            String sessionId = session.getId();
             String operationType = (String) request.getOrDefault("operationType", "SORT");
             
             @SuppressWarnings("unchecked")
@@ -71,16 +73,16 @@ public class ExportController {
                 if (request.containsKey("datasetSizes")) {
                     @SuppressWarnings("unchecked")
                     List<Integer> datasetSizes = (List<Integer>) request.get("datasetSizes");
-                    report = benchmarkService.runSortingBenchmark(algorithmNames, datasetSizes, datasetType);
+                    report = benchmarkService.runSortingBenchmark(sessionId, algorithmNames, datasetSizes, datasetType);
                 } else {
-                    report = benchmarkService.runSortingBenchmark(algorithmNames, datasetType);
+                    report = benchmarkService.runSortingBenchmark(sessionId, algorithmNames, datasetType);
                 }
             } else {
                 int target = (Integer) request.getOrDefault("target", 50);
                 @SuppressWarnings("unchecked")
                 List<Integer> datasetSizes = (List<Integer>) request.getOrDefault("datasetSizes", 
                     List.of(100, 1000, 5000));
-                report = benchmarkService.runSearchingBenchmark(algorithmNames, datasetSizes, target);
+                report = benchmarkService.runSearchingBenchmark(sessionId, algorithmNames, datasetSizes, target);
             }
             
             return ResponseEntity.ok(report);
@@ -93,11 +95,13 @@ public class ExportController {
      * Gets a specific benchmark report.
      * 
      * @param id Benchmark report ID
+     * @param session HTTP session for user isolation
      * @return Benchmark report
      */
     @GetMapping("/benchmark/results/{id}")
-    public ResponseEntity<BenchmarkReport> getBenchmarkReport(@PathVariable String id) {
-        BenchmarkReport report = benchmarkService.getReport(id);
+    public ResponseEntity<BenchmarkReport> getBenchmarkReport(@PathVariable String id, HttpSession session) {
+        String sessionId = session.getId();
+        BenchmarkReport report = benchmarkService.getReport(sessionId, id);
         if (report != null) {
             return ResponseEntity.ok(report);
         }
@@ -105,13 +109,15 @@ public class ExportController {
     }
 
     /**
-     * Gets all benchmark reports.
+     * Gets all benchmark reports for the current session.
      * 
-     * @return List of all reports
+     * @param session HTTP session for user isolation
+     * @return List of all reports in this session
      */
     @GetMapping("/benchmark/results")
-    public ResponseEntity<List<BenchmarkReport>> getAllBenchmarkReports() {
-        List<BenchmarkReport> reports = benchmarkService.getAllReports();
+    public ResponseEntity<List<BenchmarkReport>> getAllBenchmarkReports(HttpSession session) {
+        String sessionId = session.getId();
+        List<BenchmarkReport> reports = benchmarkService.getAllReports(sessionId);
         return ResponseEntity.ok(reports);
     }
 
@@ -172,13 +178,16 @@ public class ExportController {
      * 
      * @param id Benchmark report ID
      * @param format Export format (csv or json)
+     * @param session HTTP session for user isolation
      * @return Exported data
      */
     @GetMapping("/benchmark/export/{id}")
     public ResponseEntity<String> exportBenchmark(@PathVariable String id, 
-                                                  @RequestParam(defaultValue = "csv") String format) {
+                                                  @RequestParam(defaultValue = "csv") String format,
+                                                  HttpSession session) {
         try {
-            BenchmarkReport report = benchmarkService.getReport(id);
+            String sessionId = session.getId();
+            BenchmarkReport report = benchmarkService.getReport(sessionId, id);
             if (report == null) {
                 return ResponseEntity.notFound().build();
             }

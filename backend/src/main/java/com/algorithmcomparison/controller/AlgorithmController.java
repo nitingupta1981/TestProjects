@@ -8,11 +8,14 @@ import com.algorithmcomparison.service.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpSession;
 import java.util.List;
 import java.util.Map;
 
 /**
- * REST Controller for algorithm operations.
+ * REST Controller for algorithm operations with session-based isolation.
+ * 
+ * All algorithm operations are performed within the context of a user session.
  * 
  * Endpoints:
  * - POST /api/algorithms/sort/compare - Compare sorting algorithms
@@ -23,11 +26,10 @@ import java.util.Map;
  * - GET /api/algorithms/search - List available searching algorithms
  * 
  * @author Algorithm Comparison Team
- * @version 1.0
+ * @version 2.0
  */
 @RestController
 @RequestMapping("/api/algorithms")
-@CrossOrigin(origins = "*")
 public class AlgorithmController {
 
     private final SortingService sortingService;
@@ -60,17 +62,21 @@ public class AlgorithmController {
      * }
      * 
      * @param request Comparison request
+     * @param session HTTP session for user isolation
      * @return List of algorithm results
      */
     @PostMapping("/sort/compare")
     public ResponseEntity<?> compareSortingAlgorithms(
-            @RequestBody ComparisonRequest request) {
+            @RequestBody ComparisonRequest request,
+            HttpSession session) {
         try {
+            String sessionId = session.getId();
             String sortOrder = request.getSortOrder() != null ? request.getSortOrder() : "ASCENDING";
             
             if (request.getDatasetIds().size() == 1) {
                 // Single dataset comparison
                 List<AlgorithmResult> results = sortingService.compareAlgorithms(
+                    sessionId,
                     request.getDatasetIds().get(0), 
                     request.getAlgorithmNames(),
                     sortOrder
@@ -79,6 +85,7 @@ public class AlgorithmController {
             } else {
                 // Multiple dataset comparison
                 List<AlgorithmResult> results = sortingService.compareOnMultipleDatasets(
+                    sessionId,
                     request.getDatasetIds(), 
                     request.getAlgorithmNames(),
                     sortOrder
@@ -103,18 +110,23 @@ public class AlgorithmController {
      * }
      * 
      * @param request Comparison request
+     * @param session HTTP session for user isolation
      * @return List of algorithm results
      */
     @PostMapping("/search/compare")
     public ResponseEntity<?> compareSearchingAlgorithms(
-            @RequestBody ComparisonRequest request) {
+            @RequestBody ComparisonRequest request,
+            HttpSession session) {
         try {
+            String sessionId = session.getId();
+            
             if (request.getDatasetIds().size() == 1) {
                 // Single dataset comparison
                 List<AlgorithmResult> results;
                 if (request.getSearchTargetString() != null) {
                     // String search
                     results = searchingService.compareAlgorithms(
+                        sessionId,
                         request.getDatasetIds().get(0), 
                         request.getAlgorithmNames(),
                         request.getSearchTargetString()
@@ -123,6 +135,7 @@ public class AlgorithmController {
                     // Integer search
                     int target = request.getSearchTarget() != null ? request.getSearchTarget() : 0;
                     results = searchingService.compareAlgorithms(
+                        sessionId,
                         request.getDatasetIds().get(0), 
                         request.getAlgorithmNames(),
                         target
@@ -135,6 +148,7 @@ public class AlgorithmController {
                 if (request.getSearchTargetString() != null) {
                     // String search
                     results = searchingService.compareOnMultipleDatasets(
+                        sessionId,
                         request.getDatasetIds(), 
                         request.getAlgorithmNames(),
                         request.getSearchTargetString()
@@ -143,6 +157,7 @@ public class AlgorithmController {
                     // Integer search
                     int target = request.getSearchTarget() != null ? request.getSearchTarget() : 0;
                     results = searchingService.compareOnMultipleDatasets(
+                        sessionId,
                         request.getDatasetIds(), 
                         request.getAlgorithmNames(),
                         target
@@ -166,19 +181,22 @@ public class AlgorithmController {
      * }
      * 
      * @param request Map containing datasetId, algorithmName, and optional sortOrder
+     * @param session HTTP session for user isolation
      * @return List of visualization steps
      */
     @PostMapping("/visualize")
     public ResponseEntity<List<VisualizationStep>> visualizeAlgorithm(
-            @RequestBody Map<String, String> request) {
+            @RequestBody Map<String, String> request,
+            HttpSession session) {
         try {
+            String sessionId = session.getId();
             String datasetId = request.get("datasetId");
             String algorithmName = request.get("algorithmName");
             String target = request.get("target"); // For search algorithms - keep as String
             String sortOrder = request.getOrDefault("sortOrder", "ASCENDING"); // Default to ascending
             
             List<VisualizationStep> steps = visualizationService.visualizeAlgorithm(
-                datasetId, algorithmName, target, sortOrder);
+                sessionId, datasetId, algorithmName, target, sortOrder);
             
             return ResponseEntity.ok(steps);
         } catch (Exception e) {
@@ -196,17 +214,20 @@ public class AlgorithmController {
      * }
      * 
      * @param request Map containing datasetId and operationType
+     * @param session HTTP session for user isolation
      * @return Algorithm recommendation
      */
     @PostMapping("/recommend")
     public ResponseEntity<AlgorithmRecommendation> recommendAlgorithm(
-            @RequestBody Map<String, String> request) {
+            @RequestBody Map<String, String> request,
+            HttpSession session) {
         try {
+            String sessionId = session.getId();
             String datasetId = request.get("datasetId");
             String operationType = request.getOrDefault("operationType", "SORT");
             
             AlgorithmRecommendation recommendation = datasetService.getRecommendation(
-                datasetId, operationType);
+                sessionId, datasetId, operationType);
             
             return ResponseEntity.ok(recommendation);
         } catch (Exception e) {

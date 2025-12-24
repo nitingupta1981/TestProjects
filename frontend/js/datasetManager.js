@@ -12,6 +12,7 @@ export class DatasetManager {
         const response = await fetch(`${this.apiBaseUrl}/datasets/generate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include', // Enable cookies for session management
             body: JSON.stringify({ type, size, minValue, maxValue, dataType })
         });
         
@@ -26,6 +27,7 @@ export class DatasetManager {
         const response = await fetch(`${this.apiBaseUrl}/datasets/upload`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include', // Enable cookies for session management
             body: JSON.stringify({ data, name, dataType })
         });
         
@@ -37,7 +39,9 @@ export class DatasetManager {
     }
 
     async getAllDatasets() {
-        const response = await fetch(`${this.apiBaseUrl}/datasets`);
+        const response = await fetch(`${this.apiBaseUrl}/datasets`, {
+            credentials: 'include' // Enable cookies for session management
+        });
         
         if (!response.ok) {
             throw new Error('Failed to load datasets');
@@ -47,7 +51,9 @@ export class DatasetManager {
     }
 
     async getDataset(datasetId) {
-        const response = await fetch(`${this.apiBaseUrl}/datasets/${datasetId}`);
+        const response = await fetch(`${this.apiBaseUrl}/datasets/${datasetId}`, {
+            credentials: 'include' // Enable cookies for session management
+        });
         
         if (!response.ok) {
             throw new Error('Failed to load dataset');
@@ -58,14 +64,17 @@ export class DatasetManager {
 
     async deleteDataset(datasetId) {
         const response = await fetch(`${this.apiBaseUrl}/datasets/${datasetId}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            credentials: 'include' // Enable cookies for session management
         });
         
         return response.ok;
     }
 
     async exportDataset(datasetId, format = 'json') {
-        const response = await fetch(`${this.apiBaseUrl}/datasets/${datasetId}/export?format=${format}`);
+        const response = await fetch(`${this.apiBaseUrl}/datasets/${datasetId}/export?format=${format}`, {
+            credentials: 'include' // Enable cookies for session management
+        });
         
         if (!response.ok) {
             throw new Error('Failed to export dataset');

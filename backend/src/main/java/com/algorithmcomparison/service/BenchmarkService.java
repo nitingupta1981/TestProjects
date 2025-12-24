@@ -28,8 +28,8 @@ public class BenchmarkService {
     private final SortingService sortingService;
     private final SearchingService searchingService;
 
-    // In-memory storage for benchmark reports
-    private final Map<String, BenchmarkReport> reportStore = new HashMap<>();
+    // In-memory storage for benchmark reports (session-based)
+    private final Map<String, Map<String, BenchmarkReport>> sessionReportStore = new HashMap<>();
 
     /**
      * Constructor with dependency injection.
@@ -50,12 +50,13 @@ public class BenchmarkService {
      * Runs a comprehensive benchmark for sorting algorithms.
      * Tests algorithms across multiple dataset sizes.
      * 
+     * @param sessionId The user's session ID
      * @param algorithmNames List of algorithms to benchmark
      * @param datasetSizes List of dataset sizes to test
      * @param datasetType Type of dataset (RANDOM, SORTED, REVERSE_SORTED)
      * @return BenchmarkReport with all results and statistics
      */
-    public BenchmarkReport runSortingBenchmark(List<String> algorithmNames, 
+    public BenchmarkReport runSortingBenchmark(String sessionId, List<String> algorithmNames, 
                                                List<Integer> datasetSizes,
                                                String datasetType) {
         BenchmarkReport report = new BenchmarkReport("Sorting Benchmark - " + datasetType);
@@ -63,7 +64,7 @@ public class BenchmarkService {
         // Generate datasets for each size
         List<String> datasetIds = new ArrayList<>();
         for (int size : datasetSizes) {
-            Dataset dataset = datasetService.generateDataset(datasetType, size);
+            Dataset dataset = datasetService.generateDataset(sessionId, datasetType, size);
             datasetIds.add(dataset.getId());
         }
 
@@ -72,7 +73,7 @@ public class BenchmarkService {
             for (String datasetId : datasetIds) {
                 try {
                     // Use default ascending order for benchmarks
-                    AlgorithmResult result = sortingService.executeSortingAlgorithm(datasetId, algorithmName, "ASCENDING");
+                    AlgorithmResult result = sortingService.executeSortingAlgorithm(sessionId, datasetId, algorithmName, "ASCENDING");
                     report.addResult(result);
                 } catch (Exception e) {
                     System.err.println("Benchmark error for " + algorithmName + ": " + e.getMessage());
@@ -88,8 +89,9 @@ public class BenchmarkService {
 
         report.setEndTime(System.currentTimeMillis());
         
-        // Store report
-        reportStore.put(report.getId(), report);
+        // Store report in session-based store
+        Map<String, BenchmarkReport> sessionStore = sessionReportStore.computeIfAbsent(sessionId, k -> new HashMap<>());
+        sessionStore.put(report.getId(), report);
         
         return report;
     }
@@ -97,24 +99,26 @@ public class BenchmarkService {
     /**
      * Runs a benchmark with default dataset sizes.
      * 
+     * @param sessionId The user's session ID
      * @param algorithmNames List of algorithms to benchmark
      * @param datasetType Type of dataset
      * @return BenchmarkReport
      */
-    public BenchmarkReport runSortingBenchmark(List<String> algorithmNames, String datasetType) {
+    public BenchmarkReport runSortingBenchmark(String sessionId, List<String> algorithmNames, String datasetType) {
         List<Integer> defaultSizes = Arrays.asList(10, 100, 1000, 5000);
-        return runSortingBenchmark(algorithmNames, defaultSizes, datasetType);
+        return runSortingBenchmark(sessionId, algorithmNames, defaultSizes, datasetType);
     }
 
     /**
      * Runs a comprehensive benchmark for searching algorithms.
      * 
+     * @param sessionId The user's session ID
      * @param algorithmNames List of algorithms to benchmark
      * @param datasetSizes List of dataset sizes to test
      * @param target Target value to search for
      * @return BenchmarkReport
      */
-    public BenchmarkReport runSearchingBenchmark(List<String> algorithmNames,
+    public BenchmarkReport runSearchingBenchmark(String sessionId, List<String> algorithmNames,
                                                  List<Integer> datasetSizes,
                                                  int target) {
         BenchmarkReport report = new BenchmarkReport("Searching Benchmark");
@@ -122,7 +126,7 @@ public class BenchmarkService {
         // Generate datasets for each size
         List<String> datasetIds = new ArrayList<>();
         for (int size : datasetSizes) {
-            Dataset dataset = datasetService.generateDataset("RANDOM", size);
+            Dataset dataset = datasetService.generateDataset(sessionId, "RANDOM", size);
             datasetIds.add(dataset.getId());
         }
 
@@ -131,7 +135,7 @@ public class BenchmarkService {
             for (String datasetId : datasetIds) {
                 try {
                     AlgorithmResult result = searchingService.executeSearchingAlgorithm(
-                        datasetId, algorithmName, target);
+                        sessionId, datasetId, algorithmName, target);
                     report.addResult(result);
                 } catch (Exception e) {
                     System.err.println("Benchmark error for " + algorithmName + ": " + e.getMessage());
@@ -146,7 +150,10 @@ public class BenchmarkService {
         }
 
         report.setEndTime(System.currentTimeMillis());
-        reportStore.put(report.getId(), report);
+        
+        // Store report in session-based store
+        Map<String, BenchmarkReport> sessionStore = sessionReportStore.computeIfAbsent(sessionId, k -> new HashMap<>());
+        sessionStore.put(report.getId(), report);
         
         return report;
     }
@@ -242,37 +249,52 @@ public class BenchmarkService {
     /**
      * Retrieves a stored benchmark report.
      * 
+     * @param sessionId The user's session ID
      * @param reportId The report ID
      * @return BenchmarkReport if found, null otherwise
      */
-    public BenchmarkReport getReport(String reportId) {
-        return reportStore.get(reportId);
+    public BenchmarkReport getReport(String sessionId, String reportId) {
+        Map<String, BenchmarkReport> sessionStore = sessionReportStore.get(sessionId);
+        if (sessionStore == null) {
+            return null;
+        }
+        return sessionStore.get(reportId);
     }
 
     /**
-     * Gets all stored benchmark reports.
+     * Gets all stored benchmark reports for a session.
      * 
-     * @return List of all reports
+     * @param sessionId The user's session ID
+     * @return List of all reports in this session
      */
-    public List<BenchmarkReport> getAllReports() {
-        return new ArrayList<>(reportStore.values());
+    public List<BenchmarkReport> getAllReports(String sessionId) {
+        Map<String, BenchmarkReport> sessionStore = sessionReportStore.get(sessionId);
+        if (sessionStore == null) {
+            return new ArrayList<>();
+        }
+        return new ArrayList<>(sessionStore.values());
     }
 
     /**
-     * Deletes a benchmark report.
+     * Deletes a benchmark report from a session.
      * 
+     * @param sessionId The user's session ID
      * @param reportId The report ID
      * @return true if deleted, false if not found
      */
-    public boolean deleteReport(String reportId) {
-        return reportStore.remove(reportId) != null;
+    public boolean deleteReport(String sessionId, String reportId) {
+        Map<String, BenchmarkReport> sessionStore = sessionReportStore.get(sessionId);
+        if (sessionStore == null) {
+            return false;
+        }
+        return sessionStore.remove(reportId) != null;
     }
 
     /**
-     * Clears all stored benchmark reports.
+     * Clears all stored benchmark reports across all sessions.
      */
     public void clearAllReports() {
-        reportStore.clear();
+        sessionReportStore.clear();
     }
 }
 

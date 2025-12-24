@@ -12,6 +12,7 @@ export class AlgorithmRunner {
         const response = await fetch(`${this.apiBaseUrl}/algorithms/sort/compare`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include', // Enable cookies for session management
             body: JSON.stringify({
                 datasetIds,
                 algorithmNames,
@@ -54,6 +55,7 @@ export class AlgorithmRunner {
         const response = await fetch(`${this.apiBaseUrl}/algorithms/search/compare`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include', // Enable cookies for session management
             body: JSON.stringify(requestBody)
         });
         

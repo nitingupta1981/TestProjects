@@ -3,6 +3,7 @@ package com.algorithmcomparison;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -12,10 +13,16 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * This application provides a REST API for comparing sorting and searching algorithms,
  * analyzing datasets, and generating performance benchmarks.
  * 
+ * Features:
+ * - Session-based user isolation
+ * - Automatic session cleanup
+ * - CORS configuration for frontend
+ * 
  * @author Algorithm Comparison Team
- * @version 1.0
+ * @version 2.0
  */
 @SpringBootApplication
+@EnableScheduling
 public class AlgorithmComparisonApplication {
 
     /**
@@ -30,7 +37,7 @@ public class AlgorithmComparisonApplication {
 
     /**
      * Configure CORS to allow frontend to communicate with backend.
-     * Allows all origins for Cloud Run deployment (*.run.app).
+     * Allows all origin patterns with credentials for session management.
      * 
      * @return WebMvcConfigurer with CORS settings
      */
@@ -40,10 +47,10 @@ public class AlgorithmComparisonApplication {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
-                        .allowedOriginPatterns("*")  // Allow all origins including Cloud Run
+                        .allowedOriginPatterns("*")  // Allow all origins with credentials
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
-                        .allowCredentials(false);
+                        .allowCredentials(true);  // Enable credentials for session cookies
             }
         };
     }

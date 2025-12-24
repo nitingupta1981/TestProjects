@@ -153,7 +153,9 @@ export class Visualizer {
 
     async loadDatasetOptions() {
         try {
-            const response = await fetch(`${API_BASE_URL}/datasets`);
+            const response = await fetch(`${API_BASE_URL}/datasets`, {
+                credentials: 'include' // Enable cookies for session management
+            });
             const datasets = await response.json();
             
             const select = document.getElementById('vis-dataset-select');
@@ -286,6 +288,7 @@ export class Visualizer {
             const response = await fetch(`${API_BASE_URL}/algorithms/visualize`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include', // Enable cookies for session management
                 body: JSON.stringify(requestBody)
             });
             

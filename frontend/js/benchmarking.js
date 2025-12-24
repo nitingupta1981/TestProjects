@@ -12,6 +12,7 @@ export class Benchmarking {
         const response = await fetch(`${this.apiBaseUrl}/benchmark/run`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include', // Enable cookies for session management
             body: JSON.stringify({
                 operationType,
                 algorithmNames,

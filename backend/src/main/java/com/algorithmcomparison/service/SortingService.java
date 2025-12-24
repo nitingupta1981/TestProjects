@@ -36,15 +36,16 @@ public class SortingService {
     /**
      * Executes a sorting algorithm on a dataset and collects metrics.
      * 
+     * @param sessionId The user's session ID
      * @param datasetId ID of the dataset to sort
      * @param algorithmName Name of the sorting algorithm
      * @param sortOrder "ASCENDING" or "DESCENDING"
      * @return AlgorithmResult with performance metrics
      * @throws IllegalArgumentException if dataset not found or algorithm unknown
      */
-    public AlgorithmResult executeSortingAlgorithm(String datasetId, String algorithmName, String sortOrder) {
+    public AlgorithmResult executeSortingAlgorithm(String sessionId, String datasetId, String algorithmName, String sortOrder) {
         // Get dataset
-        Dataset dataset = datasetService.getDataset(datasetId);
+        Dataset dataset = datasetService.getDataset(sessionId, datasetId);
         if (dataset == null) {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
         }
@@ -127,19 +128,20 @@ public class SortingService {
     /**
      * Compares multiple sorting algorithms on a single dataset.
      * 
+     * @param sessionId The user's session ID
      * @param datasetId ID of the dataset
      * @param algorithmNames List of algorithm names to compare
      * @param sortOrder "ASCENDING" or "DESCENDING"
      * @return List of AlgorithmResults, one for each algorithm
      */
-    public List<AlgorithmResult> compareAlgorithms(String datasetId, List<String> algorithmNames, String sortOrder) {
-        System.out.println("DEBUG: compareAlgorithms called with dataset=" + datasetId + ", algorithms=" + algorithmNames + ", sortOrder=" + sortOrder);
+    public List<AlgorithmResult> compareAlgorithms(String sessionId, String datasetId, List<String> algorithmNames, String sortOrder) {
+        System.out.println("DEBUG: compareAlgorithms called with session=" + sessionId + ", dataset=" + datasetId + ", algorithms=" + algorithmNames + ", sortOrder=" + sortOrder);
         List<AlgorithmResult> results = new ArrayList<>();
         List<String> errors = new ArrayList<>();
 
         for (String algorithmName : algorithmNames) {
             try {
-                AlgorithmResult result = executeSortingAlgorithm(datasetId, algorithmName, sortOrder);
+                AlgorithmResult result = executeSortingAlgorithm(sessionId, datasetId, algorithmName, sortOrder);
                 results.add(result);
                 System.out.println("DEBUG: Added result for " + algorithmName);
             } catch (Exception e) {
@@ -165,18 +167,19 @@ public class SortingService {
     /**
      * Compares multiple sorting algorithms across multiple datasets.
      * 
+     * @param sessionId The user's session ID
      * @param datasetIds List of dataset IDs
      * @param algorithmNames List of algorithm names
      * @param sortOrder "ASCENDING" or "DESCENDING"
      * @return List of all AlgorithmResults
      */
-    public List<AlgorithmResult> compareOnMultipleDatasets(List<String> datasetIds, 
+    public List<AlgorithmResult> compareOnMultipleDatasets(String sessionId, List<String> datasetIds, 
                                                            List<String> algorithmNames,
                                                            String sortOrder) {
         List<AlgorithmResult> allResults = new ArrayList<>();
 
         for (String datasetId : datasetIds) {
-            List<AlgorithmResult> datasetResults = compareAlgorithms(datasetId, algorithmNames, sortOrder);
+            List<AlgorithmResult> datasetResults = compareAlgorithms(sessionId, datasetId, algorithmNames, sortOrder);
             allResults.addAll(datasetResults);
         }
 

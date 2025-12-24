@@ -37,15 +37,16 @@ public class SearchingService {
     /**
      * Executes a searching algorithm on a dataset and collects metrics.
      * 
+     * @param sessionId The user's session ID
      * @param datasetId ID of the dataset to search
      * @param algorithmName Name of the searching algorithm
      * @param target Value to search for
      * @return AlgorithmResult with performance metrics
      * @throws IllegalArgumentException if dataset not found or algorithm unknown
      */
-    public AlgorithmResult executeSearchingAlgorithm(String datasetId, String algorithmName, int target) {
+    public AlgorithmResult executeSearchingAlgorithm(String sessionId, String datasetId, String algorithmName, int target) {
         // Get dataset
-        Dataset dataset = datasetService.getDataset(datasetId);
+        Dataset dataset = datasetService.getDataset(sessionId, datasetId);
         if (dataset == null) {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
         }
@@ -113,15 +114,16 @@ public class SearchingService {
     /**
      * Executes a searching algorithm on a dataset and collects metrics (String target).
      * 
+     * @param sessionId The user's session ID
      * @param datasetId ID of the dataset to search
      * @param algorithmName Name of the searching algorithm
      * @param target String value to search for
      * @return AlgorithmResult with performance metrics
      * @throws IllegalArgumentException if dataset not found or algorithm unknown
      */
-    public AlgorithmResult executeSearchingAlgorithm(String datasetId, String algorithmName, String target) {
+    public AlgorithmResult executeSearchingAlgorithm(String sessionId, String datasetId, String algorithmName, String target) {
         // Get dataset
-        Dataset dataset = datasetService.getDataset(datasetId);
+        Dataset dataset = datasetService.getDataset(sessionId, datasetId);
         if (dataset == null) {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
         }
@@ -257,19 +259,20 @@ public class SearchingService {
     /**
      * Compares multiple searching algorithms on a single dataset.
      * 
+     * @param sessionId The user's session ID
      * @param datasetId ID of the dataset
      * @param algorithmNames List of algorithm names to compare
      * @param target Value to search for
      * @return List of AlgorithmResults, one for each algorithm
      */
-    public List<AlgorithmResult> compareAlgorithms(String datasetId, List<String> algorithmNames, 
+    public List<AlgorithmResult> compareAlgorithms(String sessionId, String datasetId, List<String> algorithmNames, 
                                                    int target) {
         List<AlgorithmResult> results = new ArrayList<>();
         List<String> errors = new ArrayList<>();
 
         for (String algorithmName : algorithmNames) {
             try {
-                AlgorithmResult result = executeSearchingAlgorithm(datasetId, algorithmName, target);
+                AlgorithmResult result = executeSearchingAlgorithm(sessionId, datasetId, algorithmName, target);
                 results.add(result);
             } catch (Exception e) {
                 String errorMsg = algorithmName + ": " + e.getMessage();
@@ -291,19 +294,20 @@ public class SearchingService {
     /**
      * Compares multiple searching algorithms on a single dataset (String target).
      * 
+     * @param sessionId The user's session ID
      * @param datasetId ID of the dataset
      * @param algorithmNames List of algorithm names to compare
      * @param target String value to search for
      * @return List of AlgorithmResults, one for each algorithm
      */
-    public List<AlgorithmResult> compareAlgorithms(String datasetId, List<String> algorithmNames, 
+    public List<AlgorithmResult> compareAlgorithms(String sessionId, String datasetId, List<String> algorithmNames, 
                                                    String target) {
         List<AlgorithmResult> results = new ArrayList<>();
         List<String> errors = new ArrayList<>();
 
         for (String algorithmName : algorithmNames) {
             try {
-                AlgorithmResult result = executeSearchingAlgorithm(datasetId, algorithmName, target);
+                AlgorithmResult result = executeSearchingAlgorithm(sessionId, datasetId, algorithmName, target);
                 results.add(result);
             } catch (Exception e) {
                 String errorMsg = algorithmName + ": " + e.getMessage();
@@ -325,18 +329,19 @@ public class SearchingService {
     /**
      * Compares multiple searching algorithms across multiple datasets.
      * 
+     * @param sessionId The user's session ID
      * @param datasetIds List of dataset IDs
      * @param algorithmNames List of algorithm names
      * @param target Value to search for
      * @return List of all AlgorithmResults
      */
-    public List<AlgorithmResult> compareOnMultipleDatasets(List<String> datasetIds, 
+    public List<AlgorithmResult> compareOnMultipleDatasets(String sessionId, List<String> datasetIds, 
                                                            List<String> algorithmNames,
                                                            int target) {
         List<AlgorithmResult> allResults = new ArrayList<>();
 
         for (String datasetId : datasetIds) {
-            List<AlgorithmResult> datasetResults = compareAlgorithms(datasetId, algorithmNames, target);
+            List<AlgorithmResult> datasetResults = compareAlgorithms(sessionId, datasetId, algorithmNames, target);
             allResults.addAll(datasetResults);
         }
 
@@ -346,18 +351,19 @@ public class SearchingService {
     /**
      * Compares multiple searching algorithms across multiple datasets (String target).
      * 
+     * @param sessionId The user's session ID
      * @param datasetIds List of dataset IDs
      * @param algorithmNames List of algorithm names
      * @param target String value to search for
      * @return List of all AlgorithmResults
      */
-    public List<AlgorithmResult> compareOnMultipleDatasets(List<String> datasetIds, 
+    public List<AlgorithmResult> compareOnMultipleDatasets(String sessionId, List<String> datasetIds, 
                                                            List<String> algorithmNames,
                                                            String target) {
         List<AlgorithmResult> allResults = new ArrayList<>();
 
         for (String datasetId : datasetIds) {
-            List<AlgorithmResult> datasetResults = compareAlgorithms(datasetId, algorithmNames, target);
+            List<AlgorithmResult> datasetResults = compareAlgorithms(sessionId, datasetId, algorithmNames, target);
             allResults.addAll(datasetResults);
         }
 
@@ -368,13 +374,14 @@ public class SearchingService {
      * Automatically selects an appropriate target value from the dataset.
      * Uses a value that exists in the dataset for meaningful search results.
      * 
+     * @param sessionId The user's session ID
      * @param datasetId The dataset ID
      * @return A target value from the dataset
      * @throws IllegalArgumentException if dataset not found
      * @throws UnsupportedOperationException if dataset type is not INTEGER
      */
-    public int selectTargetValue(String datasetId) {
-        Dataset dataset = datasetService.getDataset(datasetId);
+    public int selectTargetValue(String sessionId, String datasetId) {
+        Dataset dataset = datasetService.getDataset(sessionId, datasetId);
         
         if (dataset == null) {
             return 0;
