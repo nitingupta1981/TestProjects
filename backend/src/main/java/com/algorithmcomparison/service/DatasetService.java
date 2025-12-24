@@ -32,6 +32,9 @@ public class DatasetService {
     // Session-based storage: sessionId -> (datasetId -> Dataset)
     // Using ConcurrentHashMap for thread-safety
     private final Map<String, Map<String, Dataset>> sessionDatasetStore = new ConcurrentHashMap<>();
+    
+    // Benchmark dataset counter per session: sessionId -> counter
+    private final Map<String, Integer> sessionBenchmarkCounters = new ConcurrentHashMap<>();
 
     /**
      * Gets or creates a dataset store for a session.
@@ -41,6 +44,16 @@ public class DatasetService {
      */
     private Map<String, Dataset> getSessionStore(String sessionId) {
         return sessionDatasetStore.computeIfAbsent(sessionId, k -> new ConcurrentHashMap<>());
+    }
+    
+    /**
+     * Gets and increments the benchmark counter for a session.
+     * 
+     * @param sessionId The session ID
+     * @return Next benchmark sequence number
+     */
+    private int getNextBenchmarkSequence(String sessionId) {
+        return sessionBenchmarkCounters.merge(sessionId, 1, Integer::sum);
     }
 
     /**
@@ -133,9 +146,13 @@ public class DatasetService {
      */
     public Dataset generateBenchmarkDataset(String sessionId, String type, int size, String dataType) {
         Dataset dataset = generateDataset(sessionId, type, size, 1, 10000, dataType);
-        // Update the name to indicate it's a benchmark dataset with data type
+        
+        // Get sequence number for this session
+        int sequence = getNextBenchmarkSequence(sessionId);
+        
+        // Update the name to indicate it's a benchmark dataset with data type and sequence
         String dataTypeLabel = "STRING".equals(dataset.getDataType()) ? "STR" : "INT";
-        String benchmarkName = String.format("[Benchmark] %s_%s - Size %d", type, dataTypeLabel, size);
+        String benchmarkName = String.format("[Benchmark #%d] %s_%s - Size %d", sequence, type, dataTypeLabel, size);
         dataset.setName(benchmarkName);
         
         // Re-store the dataset with updated name
@@ -295,6 +312,7 @@ public class DatasetService {
      */
     public void clearSessionDatasets(String sessionId) {
         sessionDatasetStore.remove(sessionId);
+        sessionBenchmarkCounters.remove(sessionId);
     }
 
     /**

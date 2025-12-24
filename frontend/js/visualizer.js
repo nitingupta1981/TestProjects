@@ -158,11 +158,16 @@ export class Visualizer {
             });
             const datasets = await response.json();
             
+            // Filter out benchmark datasets (they're too large for visualization)
+            const visualizableDatasets = datasets.filter(dataset => 
+                !dataset.name.startsWith('[Benchmark]')
+            );
+            
             const select = document.getElementById('vis-dataset-select');
             if (select) {
                 select.innerHTML = '';
                 
-                if (datasets.length === 0) {
+                if (visualizableDatasets.length === 0) {
                     // No datasets available
                     const option = document.createElement('option');
                     option.value = '';
@@ -172,7 +177,7 @@ export class Visualizer {
                     select.appendChild(option);
                 } else {
                     // Add datasets to dropdown
-                    datasets.forEach(dataset => {
+                    visualizableDatasets.forEach(dataset => {
                         const option = document.createElement('option');
                         option.value = dataset.id;
                         option.textContent = `${dataset.name} (${dataset.size} elements)`;
