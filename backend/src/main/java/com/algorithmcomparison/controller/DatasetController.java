@@ -85,7 +85,6 @@ public class DatasetController {
                 dataset = datasetService.generateDataset(sessionId, type, size, 1, 10000, dataType);
             }
             
-            System.out.println(String.format("[SESSION-DEBUG] Dataset generated: %s for session: %s", dataset.getId(), sessionId));
             return ResponseEntity.ok(dataset);
         } catch (Exception e) {
             System.err.println("[SESSION-DEBUG] Error generating dataset: " + e.getMessage());
@@ -135,7 +134,6 @@ public class DatasetController {
                 dataset = datasetService.storeCustomDataset(sessionId, data, name);
             }
             
-            System.out.println(String.format("[SESSION-DEBUG] Dataset uploaded: %s for session: %s", dataset.getId(), sessionId));
             return ResponseEntity.ok(dataset);
         } catch (Exception e) {
             System.err.println("[SESSION-DEBUG] Error uploading dataset: " + e.getMessage());
@@ -164,7 +162,6 @@ public class DatasetController {
             String datasetId = request.get("datasetId");
             String operationType = request.getOrDefault("operationType", "SORT");
             
-            System.out.println(String.format("[SESSION-DEBUG] Analyzing dataset: %s for session: %s", datasetId, sessionId));
             DatasetCharacteristics characteristics = datasetService.analyzeDataset(sessionId, datasetId);
             AlgorithmRecommendation recommendation = datasetService.getRecommendation(sessionId, datasetId, operationType);
             
@@ -194,7 +191,6 @@ public class DatasetController {
         logSessionInfo(session, "getAllDatasets");
         String sessionId = session.getId();
         List<Dataset> datasets = datasetService.getAllDatasets(sessionId);
-        System.out.println(String.format("[SESSION-DEBUG] Found %d datasets for session: %s", datasets.size(), sessionId));
         return ResponseEntity.ok(datasets);
     }
 
