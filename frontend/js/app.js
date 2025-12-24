@@ -795,11 +795,14 @@ async function handleRunBenchmark() {
         return;
     }
     
+    const dataType = document.getElementById('data-type').value;
+    
     try {
         const report = await benchmarking.runBenchmark(
             state.operationType,
             selectedAlgorithms,
-            [100, 1000, 5000]
+            [100, 1000, 5000],
+            dataType
         );
         
         state.currentBenchmark = report;

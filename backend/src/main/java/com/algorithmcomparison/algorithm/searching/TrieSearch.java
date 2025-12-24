@@ -50,10 +50,9 @@ public class TrieSearch implements SearchingAlgorithm {
 
     @Override
     public int search(int[] array, int target, MetricsCollector metrics) {
-        // Trie search only works with String arrays
         throw new UnsupportedOperationException(
-            "Trie Search only supports String datasets. Please use INTEGER search algorithms for integer data."
-        );
+            "Trie Search only supports STRING datasets. " +
+            "Please use Linear Search or Binary Search for INTEGER data.");
     }
 
     @Override

@@ -120,34 +120,53 @@ public class AlgorithmController {
         try {
             String sessionId = session.getId();
             
-            // Check if string search is requested
+            // Check if string search or integer search
             if (request.getSearchTargetString() != null) {
-                return ResponseEntity.badRequest().body(Map.of(
-                    "error", "String search is currently not supported. Searching algorithms only support INTEGER datasets."
-                ));
-            }
-            
-            // Integer search
-            int target = request.getSearchTarget() != null ? request.getSearchTarget() : 0;
-            
-            if (request.getDatasetIds().size() == 1) {
-                // Single dataset comparison
-                List<AlgorithmResult> results = searchingService.compareAlgorithms(
-                    sessionId,
-                    request.getDatasetIds().get(0), 
-                    request.getAlgorithmNames(),
-                    target
-                );
-                return ResponseEntity.ok(results);
+                // String search
+                String target = request.getSearchTargetString();
+                
+                if (request.getDatasetIds().size() == 1) {
+                    // Single dataset comparison
+                    List<AlgorithmResult> results = searchingService.compareAlgorithms(
+                        sessionId,
+                        request.getDatasetIds().get(0), 
+                        request.getAlgorithmNames(),
+                        target
+                    );
+                    return ResponseEntity.ok(results);
+                } else {
+                    // Multiple dataset comparison
+                    List<AlgorithmResult> results = searchingService.compareOnMultipleDatasets(
+                        sessionId,
+                        request.getDatasetIds(), 
+                        request.getAlgorithmNames(),
+                        target
+                    );
+                    return ResponseEntity.ok(results);
+                }
             } else {
-                // Multiple dataset comparison
-                List<AlgorithmResult> results = searchingService.compareOnMultipleDatasets(
-                    sessionId,
-                    request.getDatasetIds(), 
-                    request.getAlgorithmNames(),
-                    target
-                );
-                return ResponseEntity.ok(results);
+                // Integer search
+                int target = request.getSearchTarget() != null ? request.getSearchTarget() : 0;
+                
+                if (request.getDatasetIds().size() == 1) {
+                    // Single dataset comparison
+                    List<AlgorithmResult> results = searchingService.compareAlgorithms(
+                        sessionId,
+                        request.getDatasetIds().get(0), 
+                        request.getAlgorithmNames(),
+                        target
+                    );
+                    return ResponseEntity.ok(results);
+                } else {
+                    // Multiple dataset comparison
+                    List<AlgorithmResult> results = searchingService.compareOnMultipleDatasets(
+                        sessionId,
+                        request.getDatasetIds(), 
+                        request.getAlgorithmNames(),
+                        target
+                    );
+                    return ResponseEntity.ok(results);
+                }
             }
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

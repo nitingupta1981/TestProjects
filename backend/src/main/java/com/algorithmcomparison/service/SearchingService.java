@@ -52,11 +52,11 @@ public class SearchingService {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
         }
 
-        // Check dataset type
-        if ("STRING".equals(dataset.getDataType())) {
+        // Check if this is a string-only algorithm on an integer dataset
+        if ("INTEGER".equals(dataset.getDataType()) && isStringOnlyAlgorithm(algorithmName)) {
             throw new UnsupportedOperationException(
-                "Searching algorithms currently only support INTEGER datasets. " +
-                "Dataset '" + dataset.getName() + "' is of type STRING."
+                algorithmName + " only supports STRING datasets. " +
+                "Dataset '" + dataset.getName() + "' is of type INTEGER."
             );
         }
 
@@ -100,7 +100,7 @@ public class SearchingService {
         metrics.stopTiming();
 
         // Build and return result
-        return new AlgorithmResult.Builder()
+        AlgorithmResult result = new AlgorithmResult.Builder()
                 .algorithmName(algorithm.getName())
                 .datasetId(dataset.getId())
                 .datasetName(dataset.getName())
@@ -114,6 +114,100 @@ public class SearchingService {
                 .complexity(algorithm.getTimeComplexity())
                 .resultType("SEARCH")
                 .build();
+        
+        return result;
+    }
+
+    /**
+     * Executes a searching algorithm on a STRING dataset and collects metrics.
+     * 
+     * @param sessionId Session ID for user isolation
+     * @param datasetId ID of the dataset to search
+     * @param algorithmName Name of the searching algorithm
+     * @param target String value to search for
+     * @return AlgorithmResult with performance metrics
+     * @throws IllegalArgumentException if dataset not found or algorithm unknown
+     * @throws UnsupportedOperationException if algorithm doesn't support STRING datasets
+     */
+    public AlgorithmResult executeSearchingAlgorithm(String sessionId, String datasetId, String algorithmName, String target) {
+        // Get dataset
+        Dataset dataset = datasetService.getDataset(sessionId, datasetId);
+        if (dataset == null) {
+            throw new IllegalArgumentException("Dataset not found: " + datasetId);
+        }
+
+        // Check dataset type - verify algorithm supports string datasets
+        if (!"STRING".equals(dataset.getDataType())) {
+            throw new UnsupportedOperationException(
+                "Cannot search for String target in INTEGER dataset. " +
+                "Dataset '" + dataset.getName() + "' is of type INTEGER."
+            );
+        }
+
+        // Check if this is an integer-only algorithm on a string dataset
+        if (isIntegerOnlyAlgorithm(algorithmName)) {
+            throw new UnsupportedOperationException(
+                algorithmName + " only supports INTEGER datasets. " +
+                "Dataset '" + dataset.getName() + "' is of type STRING. " +
+                "Please use Linear Search, Binary Search, or Trie Search for STRING data.");
+        }
+
+        if (dataset.getStringData() == null) {
+            throw new IllegalStateException("Dataset has no string data to search");
+        }
+
+        // Get algorithm instance
+        SearchingAlgorithm algorithm = createSearchingAlgorithm(algorithmName);
+        if (algorithm == null) {
+            throw new IllegalArgumentException("Unknown searching algorithm: " + algorithmName);
+        }
+
+        // For binary search, verify array is sorted
+        if (algorithm.requiresSortedArray()) {
+            String[] dataCopy = Arrays.copyOf(dataset.getStringData(), dataset.getStringData().length);
+            Arrays.sort(dataCopy);
+            return executeSearch(algorithm, dataCopy, target, dataset);
+        } else {
+            return executeSearch(algorithm, dataset.getStringData(), target, dataset);
+        }
+    }
+
+    /**
+     * Helper method to execute search on string data and collect metrics.
+     * 
+     * @param algorithm The searching algorithm
+     * @param data The string data to search
+     * @param target The target string value
+     * @param dataset The original dataset
+     * @return AlgorithmResult with metrics
+     */
+    private AlgorithmResult executeSearch(SearchingAlgorithm algorithm, String[] data, 
+                                         String target, Dataset dataset) {
+        // Create metrics collector
+        MetricsCollector metrics = new MetricsCollector();
+
+        // Execute algorithm with timing
+        metrics.startTiming();
+        int resultIndex = algorithm.search(data, target, metrics);
+        metrics.stopTiming();
+
+        // Build and return result
+        AlgorithmResult result = new AlgorithmResult.Builder()
+                .algorithmName(algorithm.getName())
+                .datasetId(dataset.getId())
+                .datasetName(dataset.getName())
+                .datasetSize(dataset.getSize())
+                .executionTimeNanos(metrics.getExecutionTimeNanos())
+                .comparisonCount(metrics.getComparisonCount())
+                .arrayAccessCount(metrics.getArrayAccessCount())
+                .foundTarget(resultIndex != -1)
+                .targetIndex(resultIndex != -1 ? resultIndex : null)
+                .nodesVisited(metrics.getArrayAccessCount())
+                .complexity(algorithm.getTimeComplexity())
+                .resultType("SEARCH")
+                .build();
+        
+        return result;
     }
 
     /**
@@ -142,6 +236,31 @@ public class SearchingService {
     }
 
     /**
+     * Compares multiple searching algorithms on a single STRING dataset.
+     * 
+     * @param sessionId Session ID for user isolation
+     * @param datasetId ID of the dataset
+     * @param algorithmNames List of algorithm names to compare
+     * @param target String value to search for
+     * @return List of AlgorithmResults, one for each algorithm
+     */
+    public List<AlgorithmResult> compareAlgorithms(String sessionId, String datasetId, List<String> algorithmNames, 
+                                                   String target) {
+        List<AlgorithmResult> results = new ArrayList<>();
+
+        for (String algorithmName : algorithmNames) {
+            try {
+                AlgorithmResult result = executeSearchingAlgorithm(sessionId, datasetId, algorithmName, target);
+                results.add(result);
+            } catch (Exception e) {
+                System.err.println("Error executing " + algorithmName + ": " + e.getMessage());
+            }
+        }
+
+        return results;
+    }
+
+    /**
      * Compares multiple searching algorithms across multiple datasets.
      * 
      * @param sessionId Session ID for user isolation
@@ -153,6 +272,28 @@ public class SearchingService {
     public List<AlgorithmResult> compareOnMultipleDatasets(String sessionId, List<String> datasetIds, 
                                                            List<String> algorithmNames,
                                                            int target) {
+        List<AlgorithmResult> allResults = new ArrayList<>();
+
+        for (String datasetId : datasetIds) {
+            List<AlgorithmResult> datasetResults = compareAlgorithms(sessionId, datasetId, algorithmNames, target);
+            allResults.addAll(datasetResults);
+        }
+
+        return allResults;
+    }
+
+    /**
+     * Compares multiple searching algorithms across multiple STRING datasets.
+     * 
+     * @param sessionId Session ID for user isolation
+     * @param datasetIds List of dataset IDs
+     * @param algorithmNames List of algorithm names
+     * @param target String value to search for
+     * @return List of all AlgorithmResults
+     */
+    public List<AlgorithmResult> compareOnMultipleDatasets(String sessionId, List<String> datasetIds, 
+                                                           List<String> algorithmNames,
+                                                           String target) {
         List<AlgorithmResult> allResults = new ArrayList<>();
 
         for (String datasetId : datasetIds) {
@@ -224,6 +365,8 @@ public class SearchingService {
                 return new LinearSearch();
             case "binarysearch":
                 return new BinarySearch();
+            case "triesearch":
+                return new TrieSearch();
             case "depthfirstsearch":
             case "dfs":
                 return new DepthFirstSearch();
@@ -233,6 +376,31 @@ public class SearchingService {
             default:
                 return null;
         }
+    }
+
+    /**
+     * Checks if an algorithm only supports string datasets.
+     * 
+     * @param algorithmName Name of the algorithm
+     * @return true if algorithm only supports strings
+     */
+    private boolean isStringOnlyAlgorithm(String algorithmName) {
+        String normalized = algorithmName.toLowerCase().replace(" ", "");
+        return normalized.equals("triesearch");
+    }
+
+    /**
+     * Checks if an algorithm only supports integer datasets.
+     * 
+     * @param algorithmName Name of the algorithm
+     * @return true if algorithm only supports integers
+     */
+    private boolean isIntegerOnlyAlgorithm(String algorithmName) {
+        String normalized = algorithmName.toLowerCase().replace(" ", "");
+        return normalized.equals("depthfirstsearch") || 
+               normalized.equals("dfs") ||
+               normalized.equals("breadthfirstsearch") ||
+               normalized.equals("bfs");
     }
 }
 

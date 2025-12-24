@@ -73,20 +73,29 @@ public class ExportController {
             
             if ("SORT".equalsIgnoreCase(operationType)) {
                 String datasetType = (String) request.getOrDefault("datasetType", "RANDOM");
+                String dataType = (String) request.getOrDefault("dataType", "INTEGER");
                 
                 if (request.containsKey("datasetSizes")) {
                     @SuppressWarnings("unchecked")
                     List<Integer> datasetSizes = (List<Integer>) request.get("datasetSizes");
-                    report = benchmarkService.runSortingBenchmark(sessionId, algorithmNames, datasetSizes, datasetType);
+                    report = benchmarkService.runSortingBenchmark(sessionId, algorithmNames, datasetSizes, datasetType, dataType);
                 } else {
                     report = benchmarkService.runSortingBenchmark(sessionId, algorithmNames, datasetType);
                 }
             } else {
-                int target = (Integer) request.getOrDefault("target", 50);
+                String dataType = (String) request.getOrDefault("dataType", "INTEGER");
                 @SuppressWarnings("unchecked")
                 List<Integer> datasetSizes = (List<Integer>) request.getOrDefault("datasetSizes", 
                     List.of(100, 1000, 5000));
-                report = benchmarkService.runSearchingBenchmark(sessionId, algorithmNames, datasetSizes, target);
+                
+                // Check if target is integer or string
+                if ("STRING".equalsIgnoreCase(dataType) && request.containsKey("targetString")) {
+                    String target = (String) request.get("targetString");
+                    report = benchmarkService.runSearchingBenchmark(sessionId, algorithmNames, datasetSizes, target, dataType);
+                } else {
+                    int target = (Integer) request.getOrDefault("target", 50);
+                    report = benchmarkService.runSearchingBenchmark(sessionId, algorithmNames, datasetSizes, target, dataType);
+                }
             }
             
             return ResponseEntity.ok(report);

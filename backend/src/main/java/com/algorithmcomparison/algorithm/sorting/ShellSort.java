@@ -68,8 +68,8 @@ public class ShellSort implements SortingAlgorithm {
     @Override
     public void sort(String[] array, MetricsCollector metrics) {
         throw new UnsupportedOperationException(
-            "Shell Sort is not yet implemented for String datasets. " +
-            "Please use Bubble Sort, Selection Sort, Insertion Sort, Merge Sort, or Quick Sort for string data.");
+            "Shell Sort does not support STRING datasets. " +
+            "Please use: Bubble Sort, Selection Sort, Insertion Sort, Quick Sort, or Merge Sort for string data.");
     }
 
     @Override

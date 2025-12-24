@@ -45,7 +45,13 @@ public class BinarySearch extends AbstractSearchingAlgorithm {
             stepCollector.recordInitial(array, 
                 "Binary Search requires sorted data. Starting search for target: " + target);
         }
-        return search(array, target, metrics);
+        
+        // Box the array and call searchGeneric with stepCollector
+        Integer[] boxedArray = new Integer[array.length];
+        for (int i = 0; i < array.length; i++) {
+            boxedArray[i] = array[i];
+        }
+        return searchGeneric(boxedArray, target, metrics, stepCollector);
     }
 
     @Override
@@ -58,7 +64,9 @@ public class BinarySearch extends AbstractSearchingAlgorithm {
             stepCollector.recordInitial(array, 
                 "Binary Search requires sorted data. Starting search for target: " + target);
         }
-        return search(array, target, metrics);
+        
+        // Call searchGeneric with stepCollector
+        return searchGeneric(array, target, metrics, stepCollector);
     }
 
     @Override

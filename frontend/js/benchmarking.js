@@ -8,17 +8,25 @@ export class Benchmarking {
         this.apiBaseUrl = apiBaseUrl;
     }
 
-    async runBenchmark(operationType, algorithmNames, datasetSizes) {
+    async runBenchmark(operationType, algorithmNames, datasetSizes, dataType = 'INTEGER') {
+        const requestBody = {
+            operationType,
+            algorithmNames,
+            datasetSizes,
+            datasetType: 'RANDOM',
+            dataType
+        };
+        
+        // For searching with string data type, add a sample target
+        if (operationType === 'SEARCH' && dataType === 'STRING') {
+            requestBody.targetString = 'apple'; // Default string target
+        }
+        
         const response = await fetch(`${this.apiBaseUrl}/benchmark/run`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include', // Enable cookies for session management
-            body: JSON.stringify({
-                operationType,
-                algorithmNames,
-                datasetSizes,
-                datasetType: 'RANDOM'
-            })
+            body: JSON.stringify(requestBody)
         });
         
         if (!response.ok) {

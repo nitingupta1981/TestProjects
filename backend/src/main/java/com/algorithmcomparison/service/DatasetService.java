@@ -128,12 +128,13 @@ public class DatasetService {
      * @param sessionId The user's session ID
      * @param type Dataset type
      * @param size Number of elements
+     * @param dataType Data type (INTEGER or STRING)
      * @return Generated dataset with benchmark naming
      */
-    public Dataset generateBenchmarkDataset(String sessionId, String type, int size) {
-        Dataset dataset = generateDataset(sessionId, type, size, 1, 10000);
+    public Dataset generateBenchmarkDataset(String sessionId, String type, int size, String dataType) {
+        Dataset dataset = generateDataset(sessionId, type, size, 1, 10000, dataType);
         // Update the name to indicate it's a benchmark dataset with data type
-        String dataTypeLabel = "INTEGER".equals(dataset.getDataType()) ? "INT" : "STR";
+        String dataTypeLabel = "STRING".equals(dataset.getDataType()) ? "STR" : "INT";
         String benchmarkName = String.format("[Benchmark] %s_%s - Size %d", type, dataTypeLabel, size);
         dataset.setName(benchmarkName);
         
@@ -142,6 +143,18 @@ public class DatasetService {
         sessionStore.put(dataset.getId(), dataset);
         
         return dataset;
+    }
+
+    /**
+     * Generates an INTEGER benchmark dataset (backwards compatible).
+     * 
+     * @param sessionId The user's session ID
+     * @param type Dataset type
+     * @param size Number of elements
+     * @return Generated INTEGER dataset with benchmark naming
+     */
+    public Dataset generateBenchmarkDataset(String sessionId, String type, int size) {
+        return generateBenchmarkDataset(sessionId, type, size, "INTEGER");
     }
 
     /**

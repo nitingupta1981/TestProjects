@@ -32,6 +32,15 @@ public class SortingService {
                                                    String algorithmName, String sortOrder) {
         Dataset dataset = getValidatedDataset(sessionId, datasetId);
         SortingAlgorithm algorithm = getValidatedAlgorithm(algorithmName);
+        
+        // Validate algorithm supports the dataset type
+        if ("STRING".equals(dataset.getDataType()) && isIntegerOnlyAlgorithm(algorithmName)) {
+            throw new UnsupportedOperationException(
+                algorithmName + " does not support STRING datasets. " +
+                "Dataset '" + dataset.getName() + "' is of type STRING. " +
+                "Please use: Bubble Sort, Selection Sort, Insertion Sort, Quick Sort, or Merge Sort for STRING data.");
+        }
+        
         boolean isDescending = "DESCENDING".equalsIgnoreCase(sortOrder);
 
         System.out.println("DEBUG: Executing " + algorithmName + " on dataset " + datasetId + 
@@ -139,7 +148,7 @@ public class SortingService {
             throw new IllegalArgumentException("Dataset not found: " + datasetId);
         }
         return dataset;
-    }
+        }
 
     private SortingAlgorithm getValidatedAlgorithm(String algorithmName) {
         SortingAlgorithm algorithm = createSortingAlgorithm(algorithmName);
@@ -234,5 +243,18 @@ public class SortingService {
             array[i] = array[j];
             array[j] = temp;
         }
+    }
+
+    /**
+     * Checks if a sorting algorithm only supports integer datasets.
+     * 
+     * @param algorithmName Name of the algorithm
+     * @return true if algorithm only supports integers
+     */
+    private boolean isIntegerOnlyAlgorithm(String algorithmName) {
+        String normalized = algorithmName.toLowerCase().replace(" ", "");
+        return normalized.equals("heapsort") || 
+               normalized.equals("shellsort") ||
+               normalized.equals("countingsort");
     }
 }

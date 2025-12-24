@@ -55,17 +55,19 @@ public class BenchmarkService {
      * @param algorithmNames List of algorithms to benchmark
      * @param datasetSizes List of dataset sizes to test
      * @param datasetType Type of dataset (RANDOM, SORTED, REVERSE_SORTED)
+     * @param dataType Data type (INTEGER or STRING)
      * @return BenchmarkReport with all results and statistics
      */
     public BenchmarkReport runSortingBenchmark(String sessionId, List<String> algorithmNames, 
                                               List<Integer> datasetSizes,
-                                              String datasetType) {
-        BenchmarkReport report = new BenchmarkReport("Sorting Benchmark - " + datasetType);
+                                              String datasetType,
+                                              String dataType) {
+        BenchmarkReport report = new BenchmarkReport("Sorting Benchmark - " + datasetType + " (" + dataType + ")");
         
         // Generate datasets for each size with benchmark naming
         List<String> datasetIds = new ArrayList<>();
         for (int size : datasetSizes) {
-            Dataset dataset = datasetService.generateBenchmarkDataset(sessionId, datasetType, size);
+            Dataset dataset = datasetService.generateBenchmarkDataset(sessionId, datasetType, size, dataType);
             datasetIds.add(dataset.getId());
         }
 
@@ -85,7 +87,10 @@ public class BenchmarkService {
         // Calculate statistics for each algorithm
         for (String algorithmName : algorithmNames) {
             BenchmarkStatistics stats = calculateStatistics(report.getResults(), algorithmName);
-            report.addStatistics(stats);
+            // Only add statistics if the algorithm had successful runs
+            if (stats.getRunsCount() > 0) {
+                report.addStatistics(stats);
+            }
         }
 
         report.setEndTime(System.currentTimeMillis());
@@ -98,7 +103,7 @@ public class BenchmarkService {
     }
 
     /**
-     * Runs a benchmark with default dataset sizes.
+     * Runs a benchmark with default dataset sizes (backwards compatible, INTEGER only).
      * 
      * @param sessionId The user's session ID
      * @param algorithmNames List of algorithms to benchmark
@@ -107,27 +112,44 @@ public class BenchmarkService {
      */
     public BenchmarkReport runSortingBenchmark(String sessionId, List<String> algorithmNames, String datasetType) {
         List<Integer> defaultSizes = Arrays.asList(10, 100, 1000, 5000);
-        return runSortingBenchmark(sessionId, algorithmNames, defaultSizes, datasetType);
+        return runSortingBenchmark(sessionId, algorithmNames, defaultSizes, datasetType, "INTEGER");
     }
 
     /**
-     * Runs a comprehensive benchmark for searching algorithms.
+     * Runs a sorting benchmark with custom sizes (backwards compatible, INTEGER only).
+     * 
+     * @param sessionId The user's session ID
+     * @param algorithmNames List of algorithms to benchmark
+     * @param datasetSizes List of dataset sizes to test
+     * @param datasetType Type of dataset (RANDOM, SORTED, REVERSE_SORTED)
+     * @return BenchmarkReport with all results and statistics
+     */
+    public BenchmarkReport runSortingBenchmark(String sessionId, List<String> algorithmNames, 
+                                              List<Integer> datasetSizes,
+                                              String datasetType) {
+        return runSortingBenchmark(sessionId, algorithmNames, datasetSizes, datasetType, "INTEGER");
+    }
+
+    /**
+     * Runs a comprehensive benchmark for searching algorithms (INTEGER).
      * 
      * @param sessionId The user's session ID
      * @param algorithmNames List of algorithms to benchmark
      * @param datasetSizes List of dataset sizes to test
      * @param target Target value to search for
+     * @param dataType Data type (INTEGER or STRING)
      * @return BenchmarkReport
      */
     public BenchmarkReport runSearchingBenchmark(String sessionId, List<String> algorithmNames,
                                                  List<Integer> datasetSizes,
-                                                 int target) {
-        BenchmarkReport report = new BenchmarkReport("Searching Benchmark");
+                                                 int target,
+                                                 String dataType) {
+        BenchmarkReport report = new BenchmarkReport("Searching Benchmark (" + dataType + ")");
 
         // Generate datasets for each size with benchmark naming
         List<String> datasetIds = new ArrayList<>();
         for (int size : datasetSizes) {
-            Dataset dataset = datasetService.generateBenchmarkDataset(sessionId, "RANDOM", size);
+            Dataset dataset = datasetService.generateBenchmarkDataset(sessionId, "RANDOM", size, dataType);
             datasetIds.add(dataset.getId());
         }
 
@@ -147,7 +169,10 @@ public class BenchmarkService {
         // Calculate statistics
         for (String algorithmName : algorithmNames) {
             BenchmarkStatistics stats = calculateStatistics(report.getResults(), algorithmName);
-            report.addStatistics(stats);
+            // Only add statistics if the algorithm had successful runs
+            if (stats.getRunsCount() > 0) {
+                report.addStatistics(stats);
+            }
         }
 
         report.setEndTime(System.currentTimeMillis());
@@ -157,6 +182,75 @@ public class BenchmarkService {
         sessionStore.put(report.getId(), report);
         
         return report;
+    }
+
+    /**
+     * Runs a comprehensive benchmark for searching algorithms (STRING).
+     * 
+     * @param sessionId The user's session ID
+     * @param algorithmNames List of algorithms to benchmark
+     * @param datasetSizes List of dataset sizes to test
+     * @param target Target string to search for
+     * @param dataType Data type (should be STRING)
+     * @return BenchmarkReport
+     */
+    public BenchmarkReport runSearchingBenchmark(String sessionId, List<String> algorithmNames,
+                                                 List<Integer> datasetSizes,
+                                                 String target,
+                                                 String dataType) {
+        BenchmarkReport report = new BenchmarkReport("Searching Benchmark (" + dataType + ")");
+
+        // Generate datasets for each size with benchmark naming
+        List<String> datasetIds = new ArrayList<>();
+        for (int size : datasetSizes) {
+            Dataset dataset = datasetService.generateBenchmarkDataset(sessionId, "RANDOM", size, dataType);
+            datasetIds.add(dataset.getId());
+        }
+
+        // Run each algorithm on each dataset
+        for (String algorithmName : algorithmNames) {
+            for (String datasetId : datasetIds) {
+                try {
+                    AlgorithmResult result = searchingService.executeSearchingAlgorithm(
+                        sessionId, datasetId, algorithmName, target);
+                    report.addResult(result);
+                } catch (Exception e) {
+                    System.err.println("Benchmark error for " + algorithmName + ": " + e.getMessage());
+                }
+            }
+        }
+
+        // Calculate statistics
+        for (String algorithmName : algorithmNames) {
+            BenchmarkStatistics stats = calculateStatistics(report.getResults(), algorithmName);
+            // Only add statistics if the algorithm had successful runs
+            if (stats.getRunsCount() > 0) {
+                report.addStatistics(stats);
+            }
+        }
+
+        report.setEndTime(System.currentTimeMillis());
+        
+        // Store report in session-based store
+        Map<String, BenchmarkReport> sessionStore = sessionReportStore.computeIfAbsent(sessionId, k -> new ConcurrentHashMap<>());
+        sessionStore.put(report.getId(), report);
+        
+        return report;
+    }
+
+    /**
+     * Runs a benchmark for searching algorithms (backwards compatible, INTEGER only).
+     * 
+     * @param sessionId The user's session ID
+     * @param algorithmNames List of algorithms to benchmark
+     * @param datasetSizes List of dataset sizes to test
+     * @param target Target value to search for
+     * @return BenchmarkReport
+     */
+    public BenchmarkReport runSearchingBenchmark(String sessionId, List<String> algorithmNames,
+                                                 List<Integer> datasetSizes,
+                                                 int target) {
+        return runSearchingBenchmark(sessionId, algorithmNames, datasetSizes, target, "INTEGER");
     }
 
     /**
