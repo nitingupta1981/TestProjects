@@ -42,6 +42,14 @@ public class DatasetController {
     public DatasetController(DatasetService datasetService) {
         this.datasetService = datasetService;
     }
+    
+    /**
+     * Helper method to log session information for debugging.
+     */
+    private void logSessionInfo(HttpSession session, String operation) {
+        System.out.println(String.format("[SESSION-DEBUG] Operation: %s | Session ID: %s | IsNew: %s | CreationTime: %s",
+            operation, session.getId(), session.isNew(), session.getCreationTime()));
+    }
 
     /**
      * Generates a new dataset.
@@ -62,6 +70,7 @@ public class DatasetController {
     @PostMapping("/generate")
     public ResponseEntity<Dataset> generateDataset(@RequestBody Map<String, Object> request, HttpSession session) {
         try {
+            logSessionInfo(session, "generateDataset");
             String sessionId = session.getId();
             String type = (String) request.get("type");
             int size = (Integer) request.get("size");
@@ -76,8 +85,10 @@ public class DatasetController {
                 dataset = datasetService.generateDataset(sessionId, type, size, 1, 10000, dataType);
             }
             
+            System.out.println(String.format("[SESSION-DEBUG] Dataset generated: %s for session: %s", dataset.getId(), sessionId));
             return ResponseEntity.ok(dataset);
         } catch (Exception e) {
+            System.err.println("[SESSION-DEBUG] Error generating dataset: " + e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
@@ -106,6 +117,7 @@ public class DatasetController {
     @PostMapping("/upload")
     public ResponseEntity<Dataset> uploadDataset(@RequestBody Map<String, Object> request, HttpSession session) {
         try {
+            logSessionInfo(session, "uploadDataset");
             String sessionId = session.getId();
             String name = (String) request.getOrDefault("name", "Custom");
             String dataType = (String) request.getOrDefault("dataType", "INTEGER");
@@ -123,8 +135,10 @@ public class DatasetController {
                 dataset = datasetService.storeCustomDataset(sessionId, data, name);
             }
             
+            System.out.println(String.format("[SESSION-DEBUG] Dataset uploaded: %s for session: %s", dataset.getId(), sessionId));
             return ResponseEntity.ok(dataset);
         } catch (Exception e) {
+            System.err.println("[SESSION-DEBUG] Error uploading dataset: " + e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
@@ -145,10 +159,12 @@ public class DatasetController {
     @PostMapping("/analyze")
     public ResponseEntity<Map<String, Object>> analyzeDataset(@RequestBody Map<String, String> request, HttpSession session) {
         try {
+            logSessionInfo(session, "analyzeDataset");
             String sessionId = session.getId();
             String datasetId = request.get("datasetId");
             String operationType = request.getOrDefault("operationType", "SORT");
             
+            System.out.println(String.format("[SESSION-DEBUG] Analyzing dataset: %s for session: %s", datasetId, sessionId));
             DatasetCharacteristics characteristics = datasetService.analyzeDataset(sessionId, datasetId);
             AlgorithmRecommendation recommendation = datasetService.getRecommendation(sessionId, datasetId, operationType);
             
@@ -159,8 +175,10 @@ public class DatasetController {
             
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
+            System.err.println("[SESSION-DEBUG] Dataset not found for analysis: " + e.getMessage());
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
+            System.err.println("[SESSION-DEBUG] Error analyzing dataset: " + e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
@@ -173,8 +191,10 @@ public class DatasetController {
      */
     @GetMapping
     public ResponseEntity<List<Dataset>> getAllDatasets(HttpSession session) {
+        logSessionInfo(session, "getAllDatasets");
         String sessionId = session.getId();
         List<Dataset> datasets = datasetService.getAllDatasets(sessionId);
+        System.out.println(String.format("[SESSION-DEBUG] Found %d datasets for session: %s", datasets.size(), sessionId));
         return ResponseEntity.ok(datasets);
     }
 
@@ -187,11 +207,14 @@ public class DatasetController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<Dataset> getDataset(@PathVariable String id, HttpSession session) {
+        logSessionInfo(session, "getDataset");
         String sessionId = session.getId();
         Dataset dataset = datasetService.getDataset(sessionId, id);
         if (dataset != null) {
+            System.out.println(String.format("[SESSION-DEBUG] Retrieved dataset: %s for session: %s", id, sessionId));
             return ResponseEntity.ok(dataset);
         }
+        System.err.println(String.format("[SESSION-DEBUG] Dataset not found: %s for session: %s", id, sessionId));
         return ResponseEntity.notFound().build();
     }
 
@@ -204,11 +227,14 @@ public class DatasetController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteDataset(@PathVariable String id, HttpSession session) {
+        logSessionInfo(session, "deleteDataset");
         String sessionId = session.getId();
         boolean deleted = datasetService.deleteDataset(sessionId, id);
         if (deleted) {
+            System.out.println(String.format("[SESSION-DEBUG] Deleted dataset: %s for session: %s", id, sessionId));
             return ResponseEntity.ok().build();
         }
+        System.err.println(String.format("[SESSION-DEBUG] Dataset not found for deletion: %s for session: %s", id, sessionId));
         return ResponseEntity.notFound().build();
     }
 
