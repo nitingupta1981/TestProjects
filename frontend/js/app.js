@@ -21,10 +21,9 @@ import { Benchmarking } from './benchmarking.js';
 import { Exporter } from './exporter.js';
 
 
-// API Base URL - automatically detect environment
-const API_BASE_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:8080/api'
-    : 'https://algocompare-backend-210924058354.europe-west1.run.app/api';
+// API Base URL
+// const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'https://algocompare-backend-210924058354.europe-west1.run.app/api';
 
 console.log('Using API:', API_BASE_URL);
 
