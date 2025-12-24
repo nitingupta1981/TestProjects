@@ -122,6 +122,28 @@ public class DatasetService {
     }
 
     /**
+     * Generates a dataset specifically for benchmarking with a descriptive name.
+     * This helps users identify auto-generated benchmark datasets.
+     * 
+     * @param sessionId The user's session ID
+     * @param type Dataset type
+     * @param size Number of elements
+     * @return Generated dataset with benchmark naming
+     */
+    public Dataset generateBenchmarkDataset(String sessionId, String type, int size) {
+        Dataset dataset = generateDataset(sessionId, type, size, 1, 10000);
+        // Update the name to indicate it's a benchmark dataset
+        String benchmarkName = String.format("[Benchmark] %s - Size %d", type, size);
+        dataset.setName(benchmarkName);
+        
+        // Re-store the dataset with updated name
+        Map<String, Dataset> sessionStore = getSessionStore(sessionId);
+        sessionStore.put(dataset.getId(), dataset);
+        
+        return dataset;
+    }
+
+    /**
      * Stores a custom dataset from user-provided data.
      * 
      * @param sessionId The user's session ID
