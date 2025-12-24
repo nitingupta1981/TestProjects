@@ -25,75 +25,40 @@ import com.algorithmcomparison.util.StepCollector;
  * - When only one search is needed (sorting overhead not justified)
  * 
  * @author Algorithm Comparison Team
- * @version 1.0
+ * @version 2.0 (Refactored to use AbstractSearchingAlgorithm)
  */
-public class LinearSearch implements SearchingAlgorithm {
+public class LinearSearch extends AbstractSearchingAlgorithm {
 
     @Override
-    public int search(int[] array, int target, MetricsCollector metrics) {
-        return searchInternal(array, target, metrics, null);
-    }
-
-    @Override
-    public int search(String[] array, String target, MetricsCollector metrics) {
-        return searchStringInternal(array, target, metrics, null);
-    }
-
-    /**
-     * Searches the array with optional step collection for visualization.
-     * 
-     * @param array The array to search
-     * @param target The target value to find
-     * @param metrics The metrics collector
-     * @param stepCollector Optional step collector for visualization (null for normal search)
-     * @return Index of target if found, -1 otherwise
-     */
-    public int searchWithSteps(int[] array, int target, MetricsCollector metrics, StepCollector stepCollector) {
-        return searchInternal(array, target, metrics, stepCollector);
-    }
-
-    /**
-     * Searches the string array with optional step collection for visualization.
-     */
-    public int searchWithSteps(String[] array, String target, MetricsCollector metrics, StepCollector stepCollector) {
-        return searchStringInternal(array, target, metrics, stepCollector);
-    }
-
-    /**
-     * Internal search implementation that optionally collects steps.
-     */
-    private int searchInternal(int[] array, int target, MetricsCollector metrics, StepCollector stepCollector) {
+    protected <T extends Comparable<T>> int searchGeneric(
+            T[] array, 
+            T target,
+            MetricsCollector metrics, 
+            StepCollector stepCollector) {
+        
         // Record initial state if collecting steps
-        if (stepCollector != null) {
-            stepCollector.recordInitial(array, "Starting Linear Search for target: " + target);
-        }
+        recordInitial(array, stepCollector, "Starting Linear Search for target: " + target);
         
         // Iterate through each element sequentially
         for (int i = 0; i < array.length; i++) {
             metrics.recordArrayAccess(1); // Count array access
             
             // Record checking this element if collecting steps
-            if (stepCollector != null) {
-                stepCollector.recordCheck(array, i, 
-                    "Checking index " + i + ": Is " + array[i] + " == " + target + "?");
-            }
+            recordCheck(array, stepCollector, i, 
+                "Checking index " + i + ": Is " + array[i] + " == " + target + "?");
             
             // Compare current element with target
-            if (metrics.isEqual(array[i], target)) {
+            if (isEqual(array[i], target, metrics)) {
                 // Target found at index i
-                if (stepCollector != null) {
-                    stepCollector.recordFound(array, i,
-                        "Target " + target + " found at index " + i + "!");
-                }
+                recordFound(array, stepCollector, i,
+                    "Target " + target + " found at index " + i + "!");
                 return i;
             }
         }
         
         // Target not found in array
-        if (stepCollector != null) {
-            stepCollector.recordNotFound(array,
-                "Target " + target + " not found in the array");
-        }
+        recordNotFound(array, stepCollector,
+            "Target " + target + " not found in the array");
         
         return -1;
     }
@@ -118,45 +83,4 @@ public class LinearSearch implements SearchingAlgorithm {
         // Linear search works on both sorted and unsorted arrays
         return false;
     }
-
-    /**
-     * Internal search implementation for String arrays that optionally collects steps.
-     */
-    private int searchStringInternal(String[] array, String target, MetricsCollector metrics, StepCollector stepCollector) {
-        // Record initial state if collecting steps
-        if (stepCollector != null) {
-            stepCollector.recordInitial(array, "Starting Linear Search for target: " + target);
-        }
-        
-        // Iterate through each element sequentially
-        for (int i = 0; i < array.length; i++) {
-            metrics.recordArrayAccess(1);
-            
-            // Record checking this element if collecting steps
-            if (stepCollector != null) {
-                stepCollector.recordCheck(array, i, 
-                    "Checking index " + i + ": Is " + array[i] + " == " + target + "?");
-            }
-            
-            // Compare current element with target
-            metrics.recordComparison(1);
-            if (array[i].equals(target)) {
-                // Target found at index i
-                if (stepCollector != null) {
-                    stepCollector.recordFound(array, i,
-                        "Target " + target + " found at index " + i + "!");
-                }
-                return i;
-            }
-        }
-        
-        // Target not found in array
-        if (stepCollector != null) {
-            stepCollector.recordNotFound(array,
-                "Target " + target + " not found in the array");
-        }
-        
-        return -1;
-    }
 }
-

@@ -31,68 +31,43 @@ import java.util.Arrays;
  * - When fast search performance is critical
  * 
  * @author Algorithm Comparison Team
- * @version 1.0
+ * @version 2.0 (Refactored to use AbstractSearchingAlgorithm)
  */
-public class BinarySearch implements SearchingAlgorithm {
+public class BinarySearch extends AbstractSearchingAlgorithm {
 
     @Override
-    public int search(int[] array, int target, MetricsCollector metrics) {
-        return searchInternal(array, target, metrics, null);
-    }
-
-    @Override
-    public int search(String[] array, String target, MetricsCollector metrics) {
-        return searchStringInternal(array, target, metrics, null);
-    }
-
-    /**
-     * Searches the array with optional step collection for visualization.
-     * If the array is not sorted, it will be sorted first (for visualization).
-     */
     public int searchWithSteps(int[] array, int target, MetricsCollector metrics, StepCollector stepCollector) {
         // For visualization, ensure array is sorted
         if (stepCollector != null) {
-            boolean isSorted = true;
-            for (int i = 1; i < array.length; i++) {
-                if (array[i] < array[i - 1]) {
-                    isSorted = false;
-                    break;
-                }
-            }
-            if (!isSorted) {
+            if (!isSorted(array)) {
                 Arrays.sort(array);
             }
             stepCollector.recordInitial(array, 
                 "Binary Search requires sorted data. Starting search for target: " + target);
         }
-        return searchInternal(array, target, metrics, stepCollector);
+        return search(array, target, metrics);
     }
 
-    /**
-     * Searches the string array with optional step collection for visualization.
-     */
+    @Override
     public int searchWithSteps(String[] array, String target, MetricsCollector metrics, StepCollector stepCollector) {
+        // For visualization, ensure array is sorted
         if (stepCollector != null) {
-            boolean isSorted = true;
-            for (int i = 1; i < array.length; i++) {
-                if (array[i].compareTo(array[i - 1]) < 0) {
-                    isSorted = false;
-                    break;
-                }
-            }
-            if (!isSorted) {
+            if (!isSorted(array)) {
                 Arrays.sort(array);
             }
             stepCollector.recordInitial(array, 
                 "Binary Search requires sorted data. Starting search for target: " + target);
         }
-        return searchStringInternal(array, target, metrics, stepCollector);
+        return search(array, target, metrics);
     }
 
-    /**
-     * Internal search implementation that optionally collects steps.
-     */
-    private int searchInternal(int[] array, int target, MetricsCollector metrics, StepCollector stepCollector) {
+    @Override
+    protected <T extends Comparable<T>> int searchGeneric(
+            T[] array, 
+            T target,
+            MetricsCollector metrics, 
+            StepCollector stepCollector) {
+        
         // Initialize search boundaries
         int left = 0;
         int right = array.length - 1;
@@ -105,47 +80,37 @@ public class BinarySearch implements SearchingAlgorithm {
             int mid = left + (right - left) / 2;
             
             metrics.recordArrayAccess(1); // Access array[mid]
-            int midValue = array[mid];
+            T midValue = array[mid];
 
             // Record this search iteration if collecting steps
-            if (stepCollector != null) {
-                stepCollector.recordRange(array, left, right, mid,
-                    String.format("Searching range [%d, %d]. Checking middle index %d: Is %d == %d?", 
-                        left, right, mid, midValue, target));
-            }
+            recordRange(array, stepCollector, left, right, mid,
+                String.format("Searching range [%d, %d]. Checking middle index %d: Is %s == %s?", 
+                    left, right, mid, midValue, target));
 
             // Compare middle element with target
-            if (metrics.isEqual(midValue, target)) {
+            if (isEqual(midValue, target, metrics)) {
                 // Target found at middle index
-                if (stepCollector != null) {
-                    stepCollector.recordFound(array, mid,
-                        "Target " + target + " found at index " + mid + "!");
-                }
+                recordFound(array, stepCollector, mid,
+                    "Target " + target + " found at index " + mid + "!");
                 return mid;
-            } else if (metrics.isLessThan(midValue, target)) {
+            } else if (isLessThan(midValue, target, metrics)) {
                 // Target is in the right half
                 // Eliminate left half by moving left boundary
-                if (stepCollector != null) {
-                    stepCollector.recordCheck(array, mid,
-                        midValue + " < " + target + ". Target is in the right half. Moving left boundary to " + (mid + 1));
-                }
+                recordCheck(array, stepCollector, mid,
+                    midValue + " < " + target + ". Target is in the right half. Moving left boundary to " + (mid + 1));
                 left = mid + 1;
             } else {
                 // Target is in the left half
                 // Eliminate right half by moving right boundary
-                if (stepCollector != null) {
-                    stepCollector.recordCheck(array, mid,
-                        midValue + " > " + target + ". Target is in the left half. Moving right boundary to " + (mid - 1));
-                }
+                recordCheck(array, stepCollector, mid,
+                    midValue + " > " + target + ". Target is in the left half. Moving right boundary to " + (mid - 1));
                 right = mid - 1;
             }
         }
 
         // Target not found in array
-        if (stepCollector != null) {
-            stepCollector.recordNotFound(array,
-                "Target " + target + " not found in the array. Search space exhausted.");
-        }
+        recordNotFound(array, stepCollector,
+            "Target " + target + " not found in the array. Search space exhausted.");
         
         return -1;
     }
@@ -171,59 +136,29 @@ public class BinarySearch implements SearchingAlgorithm {
         return true;
     }
 
+    // ==================== Helper Methods ====================
+
     /**
-     * Internal search implementation for String arrays that optionally collects steps.
+     * Checks if integer array is sorted.
      */
-    private int searchStringInternal(String[] array, String target, MetricsCollector metrics, StepCollector stepCollector) {
-        int left = 0;
-        int right = array.length - 1;
-
-        while (left <= right) {
-            int mid = left + (right - left) / 2;
-            
-            metrics.recordArrayAccess(1);
-            String midValue = array[mid];
-
-            if (stepCollector != null) {
-                stepCollector.recordRange(array, left, right, mid,
-                    String.format("Searching range [%d, %d]. Checking middle index %d: Is %s == %s?", 
-                        left, right, mid, midValue, target));
-            }
-
-            metrics.recordComparison(1);
-            int comparison = midValue.compareTo(target);
-            
-            if (comparison == 0) {
-                // Target found
-                if (stepCollector != null) {
-                    stepCollector.recordFound(array, mid,
-                        "Target " + target + " found at index " + mid + "!");
-                }
-                return mid;
-            } else if (comparison < 0) {
-                // Target is in the right half
-                if (stepCollector != null) {
-                    stepCollector.recordCheck(array, mid,
-                        midValue + " < " + target + ". Target is in the right half. Moving left boundary to " + (mid + 1));
-                }
-                left = mid + 1;
-            } else {
-                // Target is in the left half
-                if (stepCollector != null) {
-                    stepCollector.recordCheck(array, mid,
-                        midValue + " > " + target + ". Target is in the left half. Moving right boundary to " + (mid - 1));
-                }
-                right = mid - 1;
+    private boolean isSorted(int[] array) {
+        for (int i = 1; i < array.length; i++) {
+            if (array[i] < array[i - 1]) {
+                return false;
             }
         }
+        return true;
+    }
 
-        // Target not found
-        if (stepCollector != null) {
-            stepCollector.recordNotFound(array,
-                "Target " + target + " not found in the array. Search space exhausted.");
+    /**
+     * Checks if string array is sorted.
+     */
+    private boolean isSorted(String[] array) {
+        for (int i = 1; i < array.length; i++) {
+            if (array[i].compareTo(array[i - 1]) < 0) {
+                return false;
+            }
         }
-        
-        return -1;
+        return true;
     }
 }
-

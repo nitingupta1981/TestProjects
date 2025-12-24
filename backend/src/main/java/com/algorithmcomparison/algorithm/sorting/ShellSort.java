@@ -18,8 +18,10 @@ import com.algorithmcomparison.util.MetricsCollector;
  * Space Complexity: O(1) - sorts in place
  * Stable: No - may change relative order of equal elements due to long-distance swaps
  * 
+ * Note: Currently only supports integer arrays.
+ * 
  * @author Algorithm Comparison Team
- * @version 1.0
+ * @version 1.1 (Cleaned up, integer-only)
  */
 public class ShellSort implements SortingAlgorithm {
 
@@ -65,7 +67,6 @@ public class ShellSort implements SortingAlgorithm {
 
     @Override
     public void sort(String[] array, MetricsCollector metrics) {
-        // Shell Sort for strings is not currently implemented
         throw new UnsupportedOperationException(
             "Shell Sort is not yet implemented for String datasets. " +
             "Please use Bubble Sort, Selection Sort, Insertion Sort, Merge Sort, or Quick Sort for string data.");
@@ -91,4 +92,3 @@ public class ShellSort implements SortingAlgorithm {
         return false;
     }
 }
-

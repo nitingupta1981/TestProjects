@@ -2,6 +2,7 @@ package com.algorithmcomparison.algorithm.sorting;
 
 import com.algorithmcomparison.util.MetricsCollector;
 import com.algorithmcomparison.util.StepCollector;
+import java.util.function.BiPredicate;
 
 /**
  * Insertion Sort implementation.
@@ -17,77 +18,42 @@ import com.algorithmcomparison.util.StepCollector;
  * Best Performance: Nearly sorted arrays, small arrays
  * 
  * @author Algorithm Comparison Team
- * @version 1.0
+ * @version 2.0 (Refactored to use AbstractSortingAlgorithm)
  */
-public class InsertionSort implements SortingAlgorithm {
+public class InsertionSort extends AbstractSortingAlgorithm {
 
     @Override
-    public void sort(int[] array, MetricsCollector metrics) {
-        sortInternal(array, metrics, null);
-    }
-
-    @Override
-    public void sort(String[] array, MetricsCollector metrics) {
-        sortStringInternal(array, metrics, null);
-    }
-
-    /**
-     * Sorts the array with optional step collection for visualization.
-     * 
-     * @param array The array to sort
-     * @param metrics The metrics collector
-     * @param stepCollector Optional step collector for visualization (null for normal sorting)
-     */
-    public void sortWithSteps(int[] array, MetricsCollector metrics, StepCollector stepCollector) {
-        sortInternal(array, metrics, stepCollector);
-    }
-
-    /**
-     * Sorts the String array with optional step collection for visualization.
-     * 
-     * @param array The String array to sort
-     * @param metrics The metrics collector
-     * @param stepCollector Optional step collector for visualization (null for normal sorting)
-     */
-    public void sortWithSteps(String[] array, MetricsCollector metrics, StepCollector stepCollector) {
-        sortStringInternal(array, metrics, stepCollector);
-    }
-
-    /**
-     * Internal sort implementation that optionally collects steps.
-     */
-    private void sortInternal(int[] array, MetricsCollector metrics, StepCollector stepCollector) {
+    protected <T extends Comparable<T>> void sortGeneric(
+            T[] array, 
+            MetricsCollector metrics, 
+            StepCollector stepCollector,
+            BiPredicate<T, T> isGreater) {
+        
         int n = array.length;
         
         // Record initial state if collecting steps
-        if (stepCollector != null) {
-            stepCollector.recordInitial(array, "Initial array state");
-        }
+        recordInitialState(array, stepCollector, "Initial array state");
         
         // Outer loop: pick each element starting from index 1
         // The first element (index 0) is considered already sorted
         for (int i = 1; i < n; i++) {
-            int key = array[i]; // Element to be inserted
+            T key = array[i]; // Element to be inserted
             int j = i - 1;
             
             // Record picking element if collecting steps
-            if (stepCollector != null) {
-                stepCollector.recordCompare(array, i, i, 
-                    "Picking element " + key + " at index " + i + " to insert into sorted portion");
-            }
+            recordComparison(array, stepCollector, i, i, 
+                "Picking element " + key + " at index " + i + " to insert into sorted portion");
             
             // Inner loop: shift elements of sorted portion that are greater than key
             // Move elements one position to the right to make space for key
-            while (j >= 0 && metrics.isGreaterThan(array[j], key)) {
+            while (j >= 0 && isGreaterThan(array[j], key, metrics, isGreater)) {
                 // Shift element to the right
                 array[j + 1] = array[j];
                 metrics.recordArrayAccess(2); // One read, one write
                 
                 // Record the shift if collecting steps
-                if (stepCollector != null) {
-                    stepCollector.recordSwap(array, j + 1, j + 1,
-                        "Shifting " + array[j + 1] + " right to position " + (j + 1));
-                }
+                recordSwap(array, stepCollector, j + 1, j + 1,
+                    "Shifting " + array[j + 1] + " right to position " + (j + 1));
                 
                 j--;
             }
@@ -97,10 +63,8 @@ public class InsertionSort implements SortingAlgorithm {
             metrics.recordArrayAccess(1);
             
             // Record insertion if collecting steps
-            if (stepCollector != null) {
-                stepCollector.recordSwap(array, j + 1, j + 1,
-                    "Inserted " + key + " at position " + (j + 1));
-            }
+            recordSwap(array, stepCollector, j + 1, j + 1,
+                "Inserted " + key + " at position " + (j + 1));
             
             // If key wasn't moved, no swap occurred
             if (j + 1 != i) {
@@ -109,70 +73,7 @@ public class InsertionSort implements SortingAlgorithm {
         }
         
         // Record completion if collecting steps
-        if (stepCollector != null) {
-            stepCollector.recordComplete(array, "Sorting complete!");
-        }
-    }
-
-    /**
-     * Internal sort implementation for String arrays that optionally collects steps.
-     */
-    private void sortStringInternal(String[] array, MetricsCollector metrics, StepCollector stepCollector) {
-        int n = array.length;
-        
-        // Record initial state if collecting steps
-        if (stepCollector != null) {
-            stepCollector.recordInitial(array, "Initial array state");
-        }
-        
-        // Outer loop: pick each element starting from index 1
-        // The first element (index 0) is considered already sorted
-        for (int i = 1; i < n; i++) {
-            String key = array[i]; // Element to be inserted
-            int j = i - 1;
-            
-            // Record picking element if collecting steps
-            if (stepCollector != null) {
-                stepCollector.recordCompare(array, i, i, 
-                    "Picking element '" + key + "' at index " + i + " to insert into sorted portion");
-            }
-            
-            // Inner loop: shift elements of sorted portion that are greater than key
-            // Move elements one position to the right to make space for key
-            while (j >= 0 && metrics.isGreaterThan(array[j], key)) {
-                // Shift element to the right
-                array[j + 1] = array[j];
-                metrics.recordArrayAccess(2); // One read, one write
-                
-                // Record the shift if collecting steps
-                if (stepCollector != null) {
-                    stepCollector.recordSwap(array, j + 1, j + 1,
-                        "Shifting '" + array[j + 1] + "' right to position " + (j + 1));
-                }
-                
-                j--;
-            }
-            
-            // Insert the key at its correct position
-            array[j + 1] = key;
-            metrics.recordArrayAccess(1);
-            
-            // Record insertion if collecting steps
-            if (stepCollector != null) {
-                stepCollector.recordSwap(array, j + 1, j + 1,
-                    "Inserted '" + key + "' at position " + (j + 1));
-            }
-            
-            // If key wasn't moved, no swap occurred
-            if (j + 1 != i) {
-                metrics.recordSwap(1);
-            }
-        }
-        
-        // Record completion if collecting steps
-        if (stepCollector != null) {
-            stepCollector.recordComplete(array, "Sorting complete!");
-        }
+        recordComplete(array, stepCollector, "Sorting complete!");
     }
 
     @Override
@@ -195,4 +96,3 @@ public class InsertionSort implements SortingAlgorithm {
         return true;
     }
 }
-
