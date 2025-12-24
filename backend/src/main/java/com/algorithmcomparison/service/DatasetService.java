@@ -132,8 +132,9 @@ public class DatasetService {
      */
     public Dataset generateBenchmarkDataset(String sessionId, String type, int size) {
         Dataset dataset = generateDataset(sessionId, type, size, 1, 10000);
-        // Update the name to indicate it's a benchmark dataset
-        String benchmarkName = String.format("[Benchmark] %s - Size %d", type, size);
+        // Update the name to indicate it's a benchmark dataset with data type
+        String dataTypeLabel = "INTEGER".equals(dataset.getDataType()) ? "INT" : "STR";
+        String benchmarkName = String.format("[Benchmark] %s_%s - Size %d", type, dataTypeLabel, size);
         dataset.setName(benchmarkName);
         
         // Re-store the dataset with updated name
