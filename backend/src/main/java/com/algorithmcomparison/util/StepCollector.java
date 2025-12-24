@@ -320,6 +320,111 @@ public class StepCollector {
     }
     
     /**
+     * Records a custom step with specific highlighted indices (for integer arrays).
+     * Useful for divide-and-conquer algorithms like Merge Sort.
+     */
+    public void recordStep(int[] array, int[] highlightIndices, String description) {
+        VisualizationStep step = new VisualizationStep(
+            stepNumber++, 
+            Arrays.copyOf(array, array.length), 
+            "CUSTOM"
+        );
+        step.setDescription(description);
+        for (int index : highlightIndices) {
+            step.addHighlightedIndex(index, "BLUE");
+        }
+        steps.add(step);
+    }
+    
+    /**
+     * Records a custom step with specific highlighted indices (for string arrays).
+     * Useful for divide-and-conquer algorithms like Merge Sort.
+     */
+    public void recordStep(String[] array, int[] highlightIndices, String description) {
+        String[] arrayCopy = new String[array.length];
+        System.arraycopy(array, 0, arrayCopy, 0, array.length);
+        
+        VisualizationStep step = new VisualizationStep(
+            stepNumber++, 
+            arrayCopy, 
+            "CUSTOM"
+        );
+        step.setDescription(description);
+        for (int index : highlightIndices) {
+            step.addHighlightedIndex(index, "BLUE");
+        }
+        steps.add(step);
+    }
+    
+    /**
+     * Records a step with active region highlighting for divide-and-conquer algorithms.
+     * Elements in the active region are highlighted, others are dimmed.
+     * 
+     * @param array The current array state
+     * @param activeLeft Left boundary of active region (inclusive)
+     * @param activeRight Right boundary of active region (inclusive)
+     * @param highlightIndices Specific indices to highlight within the active region
+     * @param description Step description
+     */
+    public void recordRegionStep(int[] array, int activeLeft, int activeRight, int[] highlightIndices, String description) {
+        VisualizationStep step = new VisualizationStep(
+            stepNumber++, 
+            Arrays.copyOf(array, array.length), 
+            "REGION"
+        );
+        step.setDescription(description);
+        step.setActiveRegion(activeLeft, activeRight);
+        
+        // Highlight active indices in bright color
+        for (int index : highlightIndices) {
+            if (index >= activeLeft && index <= activeRight) {
+                step.addHighlightedIndex(index, "BLUE");
+            }
+        }
+        
+        // Mark inactive regions with grey
+        for (int i = 0; i < array.length; i++) {
+            if (i < activeLeft || i > activeRight) {
+                step.addHighlightedIndex(i, "GREY");
+            }
+        }
+        
+        steps.add(step);
+    }
+    
+    /**
+     * Records a step with active region highlighting for divide-and-conquer algorithms (string arrays).
+     */
+    public void recordRegionStep(String[] array, int activeLeft, int activeRight, int[] highlightIndices, String description) {
+        String[] arrayCopy = new String[array.length];
+        System.arraycopy(array, 0, arrayCopy, 0, array.length);
+        
+        VisualizationStep step = new VisualizationStep(
+            stepNumber++, 
+            arrayCopy, 
+            "REGION"
+        );
+        step.setDescription(description);
+        step.setActiveRegion(activeLeft, activeRight);
+        
+        // Highlight active indices in bright color
+        for (int index : highlightIndices) {
+            if (index >= activeLeft && index <= activeRight) {
+                step.addHighlightedIndex(index, "BLUE");
+            }
+        }
+        
+        // Mark inactive regions with grey
+        for (int i = 0; i < array.length; i++) {
+            if (i < activeLeft || i > activeRight) {
+                step.addHighlightedIndex(i, "GREY");
+            }
+        }
+        
+        steps.add(step);
+    }
+    
+    /**
      * Gets all collected steps.
      */
     public List<VisualizationStep> getSteps() {

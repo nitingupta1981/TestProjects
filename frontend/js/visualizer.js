@@ -27,7 +27,7 @@ export class Visualizer {
         ];
         
         // Algorithms with full step-by-step visualization support
-        this.supportedSortingAlgorithms = ['Bubble Sort', 'Insertion Sort', 'Selection Sort'];
+        this.supportedSortingAlgorithms = ['Bubble Sort', 'Insertion Sort', 'Selection Sort', 'Merge Sort'];
         this.supportedSearchingAlgorithms = ['Linear Search', 'Binary Search'];
     }
 
@@ -357,21 +357,59 @@ export class Visualizer {
     drawNumberVisualization(step, array) {
         const ctx = this.ctx;
         const canvas = this.canvas;
-        const barWidth = Math.min(canvas.width / array.length, 80);
         const maxValue = Math.max(...array.map(v => typeof v === 'number' ? v : 0));
         const padding = 20;
+        
+        // Check if this is a region-based step (for Merge Sort)
+        const isRegionStep = step.operation === 'REGION' && step.activeLeft !== undefined && step.activeRight !== undefined;
+        
+        // Calculate bar width with optional spacing for divided regions
+        let barWidth;
+        let gapSize = 0;
+        
+        if (isRegionStep) {
+            // Add visual gap for divided regions
+            gapSize = 10;
+            const activeRegionSize = step.activeRight - step.activeLeft + 1;
+            const leftInactive = step.activeLeft;
+            const rightInactive = array.length - step.activeRight - 1;
+            const totalGaps = (leftInactive > 0 ? 1 : 0) + (rightInactive > 0 ? 1 : 0);
+            barWidth = Math.min((canvas.width - padding * 2 - totalGaps * gapSize) / array.length, 80);
+        } else {
+            barWidth = Math.min(canvas.width / array.length, 80);
+        }
         
         // Draw bars
         array.forEach((value, index) => {
             const numValue = typeof value === 'number' ? value : 0;
             const barHeight = maxValue > 0 ? (numValue / maxValue) * (canvas.height - 80) : 0;
-            const x = padding + index * barWidth;
+            
+            // Calculate x position with gaps for regions
+            let x = padding + index * barWidth;
+            if (isRegionStep) {
+                if (index > step.activeRight) {
+                    // Add gap after active region
+                    x += gapSize;
+                }
+                if (index > step.activeLeft && step.activeLeft > 0) {
+                    // Add gap before active region
+                    x += gapSize;
+                }
+            }
+            
             const y = canvas.height - barHeight - 30;
             
-            // Color based on highlighting and operation
-            let color = this.getHighlightColor(step, index);
+            // Get color based on highlighting, with special handling for regions
+            let color = this.getHighlightColorForRegion(step, index);
+            let alpha = 1.0;
             
-            // Draw bar
+            // Dim inactive regions
+            if (isRegionStep && (index < step.activeLeft || index > step.activeRight)) {
+                alpha = 0.3;
+            }
+            
+            // Draw bar with alpha
+            ctx.globalAlpha = alpha;
             ctx.fillStyle = color;
             ctx.fillRect(x, y, barWidth - 4, barHeight);
             
@@ -379,15 +417,43 @@ export class Visualizer {
             ctx.strokeStyle = '#333';
             ctx.lineWidth = 1;
             ctx.strokeRect(x, y, barWidth - 4, barHeight);
+            ctx.globalAlpha = 1.0;
             
             // Draw value on top of bar (only if bar is wide enough)
             if (barWidth > 30) {
-                ctx.fillStyle = '#000';
+                ctx.fillStyle = alpha < 1 ? '#999' : '#000';
                 ctx.font = 'bold 14px Arial';
                 ctx.textAlign = 'center';
                 ctx.fillText(value, x + (barWidth - 4) / 2, canvas.height - barHeight - 35);
             }
         });
+        
+        // Draw region separators
+        if (isRegionStep) {
+            ctx.strokeStyle = '#ff6b6b';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([5, 5]);
+            
+            // Draw separator before active region
+            if (step.activeLeft > 0) {
+                const sepX = padding + step.activeLeft * barWidth + gapSize / 2;
+                ctx.beginPath();
+                ctx.moveTo(sepX, 50);
+                ctx.lineTo(sepX, canvas.height - 50);
+                ctx.stroke();
+            }
+            
+            // Draw separator after active region
+            if (step.activeRight < array.length - 1) {
+                const sepX = padding + (step.activeRight + 1) * barWidth + gapSize + (step.activeLeft > 0 ? gapSize : 0);
+                ctx.beginPath();
+                ctx.moveTo(sepX, 50);
+                ctx.lineTo(sepX, canvas.height - 50);
+                ctx.stroke();
+            }
+            
+            ctx.setLineDash([]);
+        }
     }
 
     drawStringVisualization(step, array) {
@@ -398,26 +464,52 @@ export class Visualizer {
         const boxWidth = 50;
         const padding = 10;
         
+        // Check if this is a region-based step (for Merge Sort)
+        const isRegionStep = step.operation === 'REGION' && step.activeLeft !== undefined && step.activeRight !== undefined;
+        
+        // Calculate gap size for regions
+        let gapSize = 0;
+        if (isRegionStep) {
+            gapSize = 20; // Larger gap for string boxes
+        }
+        
         // Calculate box height based on longest string (with character height)
         const charHeight = 16; // Height per character
         const maxStringLength = Math.max(...array.map(s => s.toString().length));
         const boxHeight = Math.max(maxStringLength * charHeight + 20, 80); // Minimum 80px
         
         // Position boxes to fill canvas width
-        const totalWidth = array.length * (boxWidth + padding);
+        const totalWidth = array.length * (boxWidth + padding) + (isRegionStep ? gapSize * 2 : 0);
         const startX = (canvas.width - totalWidth) / 2 + padding;
         const startY = (canvas.height - boxHeight) / 2; // Center vertically
         
         // Draw string boxes
         array.forEach((value, index) => {
-            const x = startX + index * (boxWidth + padding);
+            // Calculate x position with gaps for regions
+            let x = startX + index * (boxWidth + padding);
+            if (isRegionStep) {
+                if (index > step.activeRight) {
+                    x += gapSize;
+                }
+                if (index >= step.activeLeft && step.activeLeft > 0) {
+                    x += gapSize;
+                }
+            }
+            
             const y = startY;
             
             // Color based on highlighting and operation
-            let color = this.getHighlightColor(step, index);
+            let color = this.getHighlightColorForRegion(step, index);
             const isHighlighted = step.highlightedIndices && step.highlightedIndices.includes(index);
             
+            // Determine alpha for inactive regions
+            let alpha = 1.0;
+            if (isRegionStep && (index < step.activeLeft || index > step.activeRight)) {
+                alpha = 0.3;
+            }
+            
             // Only draw filled box if highlighted, otherwise just draw border
+            ctx.globalAlpha = alpha;
             if (isHighlighted) {
                 ctx.fillStyle = color;
                 ctx.fillRect(x, y, boxWidth, boxHeight);
@@ -427,6 +519,7 @@ export class Visualizer {
             ctx.strokeStyle = isHighlighted ? '#333' : '#ddd';
             ctx.lineWidth = isHighlighted ? 2 : 0.5;
             ctx.strokeRect(x, y, boxWidth, boxHeight);
+            ctx.globalAlpha = 1.0;
             
             // Draw string value vertically (bottom to top)
             ctx.save(); // Save current context state
@@ -438,7 +531,7 @@ export class Visualizer {
             ctx.rotate(-Math.PI / 2);
             
             // Draw text
-            ctx.fillStyle = '#000';
+            ctx.fillStyle = alpha < 1 ? '#999' : '#000';
             ctx.font = '18px Arial';
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
@@ -449,11 +542,38 @@ export class Visualizer {
             ctx.restore(); // Restore context state
             
             // Draw index below box
-            ctx.fillStyle = '#666';
+            ctx.fillStyle = alpha < 1 ? '#ccc' : '#666';
             ctx.font = '12px Arial';
             ctx.textAlign = 'center';
             ctx.fillText(index, x + boxWidth / 2, y + boxHeight + 15);
         });
+        
+        // Draw region separators
+        if (isRegionStep) {
+            ctx.strokeStyle = '#ff6b6b';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([5, 5]);
+            
+            // Draw separator before active region
+            if (step.activeLeft > 0) {
+                const sepX = startX + step.activeLeft * (boxWidth + padding) + gapSize / 2;
+                ctx.beginPath();
+                ctx.moveTo(sepX, startY - 20);
+                ctx.lineTo(sepX, startY + boxHeight + 20);
+                ctx.stroke();
+            }
+            
+            // Draw separator after active region
+            if (step.activeRight < array.length - 1) {
+                const sepX = startX + (step.activeRight + 1) * (boxWidth + padding) + gapSize + (step.activeLeft > 0 ? gapSize : 0);
+                ctx.beginPath();
+                ctx.moveTo(sepX, startY - 20);
+                ctx.lineTo(sepX, startY + boxHeight + 20);
+                ctx.stroke();
+            }
+            
+            ctx.setLineDash([]);
+        }
     }
 
     getHighlightColor(step, index) {
@@ -481,6 +601,31 @@ export class Visualizer {
         }
         
         return color;
+    }
+
+    getHighlightColorForRegion(step, index) {
+        // Check if this index has a specific color in the colors array
+        if (step.highlightedIndices && step.colors && step.highlightedIndices.includes(index)) {
+            const colorIndex = step.highlightedIndices.indexOf(index);
+            if (colorIndex >= 0 && colorIndex < step.colors.length) {
+                const colorName = step.colors[colorIndex];
+                // Map color names to hex values
+                const colorMap = {
+                    'GREY': '#cccccc',
+                    'GRAY': '#cccccc',
+                    'BLUE': '#4dabf7',
+                    'GREEN': '#51cf66',
+                    'RED': '#ff6b6b',
+                    'YELLOW': '#ffd700',
+                    'PURPLE': '#a78bfa',
+                    'ORANGE': '#ff922b'
+                };
+                return colorMap[colorName] || '#4dabf7';
+            }
+        }
+        
+        // Fall back to original color logic
+        return this.getHighlightColor(step, index);
     }
 
     updateStepCounter() {

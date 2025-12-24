@@ -30,41 +30,59 @@ public class MergeSort extends AbstractSortingAlgorithm {
             BiPredicate<T, T> isGreater) {
         
         if (array.length > 1) {
-            mergeSort(array, 0, array.length - 1, metrics, isGreater);
+            // Record initial state
+            recordInitialState(array, stepCollector, "Starting Merge Sort");
+            
+            mergeSort(array, 0, array.length - 1, metrics, stepCollector, isGreater);
+            
+            // Record final sorted state
+            recordComplete(array, stepCollector, "Merge Sort Complete");
         }
     }
 
     /**
-     * Recursive merge sort method.
+     * Recursive merge sort method with visualization support.
      * 
      * @param array The array to sort
      * @param left Starting index
      * @param right Ending index
      * @param metrics Metrics collector
+     * @param stepCollector Step collector for visualization
      * @param isGreater Comparison function
      */
     private <T extends Comparable<T>> void mergeSort(
             T[] array, int left, int right, 
-            MetricsCollector metrics, 
+            MetricsCollector metrics,
+            StepCollector stepCollector,
             BiPredicate<T, T> isGreater) {
         
         if (left < right) {
             // Find the middle point to divide the array into two halves
             int mid = left + (right - left) / 2;
             
+            // Show division step with active region highlighting
+            if (stepCollector != null) {
+                int[] highlightIndices = new int[right - left + 1];
+                for (int i = 0; i < highlightIndices.length; i++) {
+                    highlightIndices[i] = left + i;
+                }
+                recordRegionStep(array, stepCollector, left, right, highlightIndices, 
+                    String.format("Dividing region [%d...%d] at mid=%d", left, right, mid));
+            }
+            
             // Recursively sort first half
-            mergeSort(array, left, mid, metrics, isGreater);
+            mergeSort(array, left, mid, metrics, stepCollector, isGreater);
             
             // Recursively sort second half
-            mergeSort(array, mid + 1, right, metrics, isGreater);
+            mergeSort(array, mid + 1, right, metrics, stepCollector, isGreater);
             
             // Merge the sorted halves
-            merge(array, left, mid, right, metrics, isGreater);
+            merge(array, left, mid, right, metrics, stepCollector, isGreater);
         }
     }
 
     /**
-     * Merges two sorted subarrays into a single sorted array.
+     * Merges two sorted subarrays into a single sorted array with visualization support.
      * 
      * This is the core operation of Merge Sort:
      * 1. Create temporary arrays for left and right halves
@@ -76,17 +94,29 @@ public class MergeSort extends AbstractSortingAlgorithm {
      * @param mid Ending index of left subarray (mid+1 is start of right)
      * @param right Ending index of right subarray
      * @param metrics Metrics collector
+     * @param stepCollector Step collector for visualization
      * @param isGreater Comparison function
      */
     @SuppressWarnings("unchecked")
     private <T extends Comparable<T>> void merge(
             T[] array, int left, int mid, int right, 
-            MetricsCollector metrics, 
+            MetricsCollector metrics,
+            StepCollector stepCollector,
             BiPredicate<T, T> isGreater) {
         
         // Calculate sizes of two subarrays to be merged
         int n1 = mid - left + 1;
         int n2 = right - mid;
+        
+        // Show merge start with active region
+        if (stepCollector != null) {
+            int[] mergeIndices = new int[right - left + 1];
+            for (int i = 0; i < mergeIndices.length; i++) {
+                mergeIndices[i] = left + i;
+            }
+            recordRegionStep(array, stepCollector, left, right, mergeIndices, 
+                String.format("Merging [%d...%d] and [%d...%d]", left, mid, mid + 1, right));
+        }
         
         // Create temporary arrays using reflection to handle generics
         T[] leftArray = (T[]) Array.newInstance(array.getClass().getComponentType(), n1);
@@ -119,6 +149,11 @@ public class MergeSort extends AbstractSortingAlgorithm {
             }
             metrics.recordArrayAccess(1); // Writing to array
             metrics.recordSwap(1); // Consider this a move operation
+            
+            // Record merge step with active region
+            recordRegionStep(array, stepCollector, left, right, new int[]{k}, 
+                String.format("Placed element at position %d during merge", k));
+            
             k++;
         }
         
@@ -126,6 +161,10 @@ public class MergeSort extends AbstractSortingAlgorithm {
         while (i < n1) {
             array[k] = leftArray[i];
             metrics.recordArrayAccess(1);
+            
+            recordRegionStep(array, stepCollector, left, right, new int[]{k}, 
+                String.format("Copied remaining left element to position %d", k));
+            
             i++;
             k++;
         }
@@ -134,8 +173,22 @@ public class MergeSort extends AbstractSortingAlgorithm {
         while (j < n2) {
             array[k] = rightArray[j];
             metrics.recordArrayAccess(1);
+            
+            recordRegionStep(array, stepCollector, left, right, new int[]{k}, 
+                String.format("Copied remaining right element to position %d", k));
+            
             j++;
             k++;
+        }
+        
+        // Show merge complete with active region
+        if (stepCollector != null) {
+            int[] mergedIndices = new int[right - left + 1];
+            for (int idx = 0; idx < mergedIndices.length; idx++) {
+                mergedIndices[idx] = left + idx;
+            }
+            recordRegionStep(array, stepCollector, left, right, mergedIndices, 
+                String.format("Merged region [%d...%d] complete", left, right));
         }
     }
 

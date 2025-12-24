@@ -144,6 +144,38 @@ public abstract class AbstractSortingAlgorithm implements SortingAlgorithm {
     }
 
     /**
+     * Records a custom step with highlighted indices for visualization.
+     * Useful for divide-and-conquer algorithms like Merge Sort.
+     */
+    protected void recordCustomStep(Object array, StepCollector stepCollector, int[] highlightIndices, String message) {
+        if (stepCollector != null) {
+            if (array instanceof int[]) {
+                stepCollector.recordStep((int[]) array, highlightIndices, message);
+            } else if (array instanceof Integer[]) {
+                stepCollector.recordStep(unboxToIntArray((Integer[]) array), highlightIndices, message);
+            } else if (array instanceof String[]) {
+                stepCollector.recordStep((String[]) array, highlightIndices, message);
+            }
+        }
+    }
+
+    /**
+     * Records a step with active region highlighting for divide-and-conquer algorithms.
+     * Highlights the active region and dims inactive regions.
+     */
+    protected void recordRegionStep(Object array, StepCollector stepCollector, int activeLeft, int activeRight, int[] highlightIndices, String message) {
+        if (stepCollector != null) {
+            if (array instanceof int[]) {
+                stepCollector.recordRegionStep((int[]) array, activeLeft, activeRight, highlightIndices, message);
+            } else if (array instanceof Integer[]) {
+                stepCollector.recordRegionStep(unboxToIntArray((Integer[]) array), activeLeft, activeRight, highlightIndices, message);
+            } else if (array instanceof String[]) {
+                stepCollector.recordRegionStep((String[]) array, activeLeft, activeRight, highlightIndices, message);
+            }
+        }
+    }
+
+    /**
      * Unified comparison method that uses MetricsCollector.
      */
     protected <T extends Comparable<T>> boolean isGreaterThan(T a, T b, MetricsCollector metrics, BiPredicate<T, T> isGreater) {

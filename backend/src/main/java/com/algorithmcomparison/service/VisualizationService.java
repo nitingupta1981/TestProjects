@@ -5,6 +5,7 @@ import com.algorithmcomparison.model.Dataset;
 import com.algorithmcomparison.algorithm.sorting.BubbleSort;
 import com.algorithmcomparison.algorithm.sorting.InsertionSort;
 import com.algorithmcomparison.algorithm.sorting.SelectionSort;
+import com.algorithmcomparison.algorithm.sorting.MergeSort;
 import com.algorithmcomparison.algorithm.searching.LinearSearch;
 import com.algorithmcomparison.algorithm.searching.BinarySearch;
 import com.algorithmcomparison.util.MetricsCollector;
@@ -128,6 +129,12 @@ public class VisualizationService {
             return steps;
         } else if (algorithmName.equalsIgnoreCase("Selection Sort")) {
             List<VisualizationStep> steps = visualizeSelectionSort(sessionId, datasetId);
+            if (isDescending) {
+                reverseVisualizationSteps(steps);
+            }
+            return steps;
+        } else if (algorithmName.equalsIgnoreCase("Merge Sort")) {
+            List<VisualizationStep> steps = visualizeMergeSort(sessionId, datasetId);
             if (isDescending) {
                 reverseVisualizationSteps(steps);
             }
@@ -342,6 +349,42 @@ public class VisualizationService {
             }
             int[] array = Arrays.copyOf(dataset.getData(), dataset.getData().length);
             selectionSort.sortWithSteps(array, metrics, stepCollector);
+        }
+        
+        return stepCollector.getSteps();
+    }
+
+    /**
+     * Generates visualization steps for Merge Sort algorithm.
+     * 
+     * @param sessionId The user's session ID
+     * @param datasetId The dataset ID
+     * @return List of visualization steps
+     */
+    private List<VisualizationStep> visualizeMergeSort(String sessionId, String datasetId) {
+        Dataset dataset = datasetService.getDataset(sessionId, datasetId);
+        if (dataset == null) {
+            throw new IllegalArgumentException("Dataset not found: " + datasetId);
+        }
+
+        MetricsCollector metrics = new MetricsCollector();
+        StepCollector stepCollector = new StepCollector();
+        
+        MergeSort mergeSort = new MergeSort();
+        
+        // Handle both INTEGER and STRING datasets
+        if ("STRING".equals(dataset.getDataType())) {
+            if (dataset.getStringData() == null) {
+                throw new IllegalStateException("Dataset has no string data to visualize");
+            }
+            String[] array = Arrays.copyOf(dataset.getStringData(), dataset.getStringData().length);
+            mergeSort.sortWithSteps(array, metrics, stepCollector);
+        } else {
+            if (dataset.getData() == null) {
+                throw new IllegalStateException("Dataset has no data to visualize");
+            }
+            int[] array = Arrays.copyOf(dataset.getData(), dataset.getData().length);
+            mergeSort.sortWithSteps(array, metrics, stepCollector);
         }
         
         return stepCollector.getSteps();

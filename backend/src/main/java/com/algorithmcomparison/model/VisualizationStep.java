@@ -21,6 +21,10 @@ public class VisualizationStep {
     private List<Integer> highlightedIndices;
     private String description;
     private List<String> colors; // Color codes for highlighted indices
+    
+    // Metadata for divide-and-conquer algorithms like Merge Sort
+    private Integer activeLeft;  // Left boundary of active region
+    private Integer activeRight; // Right boundary of active region
 
     /**
      * Default constructor.
@@ -174,6 +178,33 @@ public class VisualizationStep {
         this.colors = colors;
     }
 
+    public Integer getActiveLeft() {
+        return activeLeft;
+    }
+
+    public void setActiveLeft(Integer activeLeft) {
+        this.activeLeft = activeLeft;
+    }
+
+    public Integer getActiveRight() {
+        return activeRight;
+    }
+
+    public void setActiveRight(Integer activeRight) {
+        this.activeRight = activeRight;
+    }
+
+    /**
+     * Sets the active region boundaries for divide-and-conquer algorithms.
+     * 
+     * @param left Left boundary index (inclusive)
+     * @param right Right boundary index (inclusive)
+     */
+    public void setActiveRegion(int left, int right) {
+        this.activeLeft = left;
+        this.activeRight = right;
+    }
+
     /**
      * Creates a copy of this visualization step.
      * 
@@ -187,6 +218,8 @@ public class VisualizationStep {
         copy.setDescription(this.description);
         copy.setHighlightedIndices(new ArrayList<>(this.highlightedIndices));
         copy.setColors(new ArrayList<>(this.colors));
+        copy.setActiveLeft(this.activeLeft);
+        copy.setActiveRight(this.activeRight);
         return copy;
     }
 
