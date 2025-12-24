@@ -17,8 +17,8 @@ export class Visualizer {
         
         // All sorting algorithms
         this.sortingAlgorithms = [
-            'Bubble Sort', 'Selection Sort', 'Insertion Sort', 'Quick Sort',
-            'Merge Sort', 'Heap Sort', 'Shell Sort', 'Counting Sort'
+            'Bubble Sort', 'Selection Sort', 'Insertion Sort', 'Merge Sort',
+            'Quick Sort', 'Heap Sort', 'Shell Sort', 'Counting Sort'
         ];
         
         // All searching algorithms
