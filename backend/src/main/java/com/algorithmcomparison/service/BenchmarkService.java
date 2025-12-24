@@ -62,10 +62,10 @@ public class BenchmarkService {
                                               String datasetType) {
         BenchmarkReport report = new BenchmarkReport("Sorting Benchmark - " + datasetType);
         
-        // Generate datasets for each size
+        // Generate datasets for each size with benchmark naming
         List<String> datasetIds = new ArrayList<>();
         for (int size : datasetSizes) {
-            Dataset dataset = datasetService.generateDataset(sessionId, datasetType, size);
+            Dataset dataset = datasetService.generateBenchmarkDataset(sessionId, datasetType, size);
             datasetIds.add(dataset.getId());
         }
 
@@ -124,10 +124,10 @@ public class BenchmarkService {
                                                  int target) {
         BenchmarkReport report = new BenchmarkReport("Searching Benchmark");
 
-        // Generate datasets for each size
+        // Generate datasets for each size with benchmark naming
         List<String> datasetIds = new ArrayList<>();
         for (int size : datasetSizes) {
-            Dataset dataset = datasetService.generateDataset(sessionId, "RANDOM", size);
+            Dataset dataset = datasetService.generateBenchmarkDataset(sessionId, "RANDOM", size);
             datasetIds.add(dataset.getId());
         }
 
@@ -153,7 +153,7 @@ public class BenchmarkService {
         report.setEndTime(System.currentTimeMillis());
         
         // Store report in session-based store
-        Map<String, BenchmarkReport> sessionStore = sessionReportStore.computeIfAbsent(sessionId, k -> new HashMap<>());
+        Map<String, BenchmarkReport> sessionStore = sessionReportStore.computeIfAbsent(sessionId, k -> new ConcurrentHashMap<>());
         sessionStore.put(report.getId(), report);
         
         return report;
