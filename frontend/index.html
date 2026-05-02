@@ -15,8 +15,8 @@
 
         <!-- Tab Navigation -->
         <nav class="tab-navigation">
-            <button class="tab-btn active" data-tab="main">📊 Datasets & Comparison</button>
-            <button class="tab-btn" data-tab="visualization">🎬 Visualization</button>
+            <button class="tab-btn active" data-tab="main">Datasets & Comparison</button>
+            <button class="tab-btn" data-tab="visualization">Visualization</button>
         </nav>
 
         <main>
@@ -49,7 +49,7 @@
                 <button id="generate-dataset-btn" class="btn btn-primary">Generate Dataset</button>
                 <button id="upload-dataset-btn" class="btn btn-secondary">Enter Data Manually</button>
                 <input type="file" id="csv-file-input" accept=".csv,.txt" style="display: none;">
-                <button id="upload-csv-btn" class="btn btn-secondary">📁 Upload CSV File</button>
+                <button id="upload-csv-btn" class="btn btn-secondary">Upload CSV File</button>
 
                 <div id="datasets-list" class="datasets-container">
                     <h3>Available Datasets</h3>
@@ -58,7 +58,7 @@
                 
                 <!-- Analyze Dataset Button - appears after datasets are created -->
                 <button id="analyze-dataset-btn" class="btn btn-info" style="display: none; margin-top: 15px;">
-                    📊 Analyze Dataset & Get Recommendations
+                    Analyze Dataset & Get Recommendations
                 </button>
             </section>
 
@@ -150,7 +150,7 @@
                         <label>Select Dataset:</label>
                         <select id="vis-dataset-select"></select>
                         <small style="color: #ff9800; display: block; margin-top: 5px;">
-                            ⚠️ For best performance, use datasets with ≤100 elements
+                            For best performance, use datasets with ≤100 elements
                         </small>
                     </div>
                     <div class="form-group">
@@ -164,7 +164,7 @@
                         <label>Select Algorithm:</label>
                         <select id="vis-algorithm-select"></select>
                         <small style="color: #666; display: block; margin-top: 5px;">
-                            💡 Only algorithms with full step-by-step visualization are enabled
+                            Only algorithms with full step-by-step visualization are enabled
                         </small>
                     </div>
                     <div class="form-group" id="vis-sort-order-group">
@@ -183,12 +183,12 @@
                 
                 <div class="visualization-player" id="visualization-player" style="display: none;">
                     <div id="visualization-controls">
-                        <button id="play-btn" class="btn btn-primary">▶ Play</button>
-                        <button id="pause-btn" class="btn btn-secondary">⏸ Pause</button>
-                        <button id="step-forward-btn" class="btn btn-info">⏭ Step Forward</button>
-                        <button id="step-backward-btn" class="btn btn-info">⏮ Step Backward</button>
-                        <button id="reset-btn" class="btn btn-secondary">⏮ Reset</button>
-                        <button id="restart-vis-btn" class="btn btn-warning">🔄 New Visualization</button>
+                        <button id="play-btn" class="btn btn-primary">Play</button>
+                        <button id="pause-btn" class="btn btn-secondary">Pause</button>
+                        <button id="step-forward-btn" class="btn btn-info">Step Forward</button>
+                        <button id="step-backward-btn" class="btn btn-info">Step Backward</button>
+                        <button id="reset-btn" class="btn btn-secondary">Reset</button>
+                        <button id="restart-vis-btn" class="btn btn-warning">New Visualization</button>
                     </div>
                     <div class="speed-control">
                         <label>Speed: <span id="speed-value">5</span>x</label>
